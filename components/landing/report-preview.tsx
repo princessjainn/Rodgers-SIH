@@ -1,4 +1,7 @@
-import { ISSUES } from '@/lib/demo-data'
+'use client'
+
+import { useEffect, useState } from 'react'
+import type { IssueRecord } from '@/lib/types'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
 import { CivicTimeline } from '@/components/brand/civic-timeline'
 import { PriorityBadge, TrustBadge } from '@/components/brand/badges'
@@ -6,25 +9,48 @@ import { Logo } from '@/components/brand/logo'
 import { Building2, MapPin, Phone, ShieldCheck, FileText } from 'lucide-react'
 
 export function ReportPreview() {
-  const issue =
-    ISSUES[1] ?? {
-      documentId: 'CC-READY-000001',
-      title: 'Community issue intake',
-      locality: 'Your neighbourhood',
-      description:
-        'This section will display a live civic issue from Supabase once your backend and database are connected.',
-      department: 'Municipal operations',
-      pin: 'Local feed',
-      hub: 'Live system',
-      officer: 'Assigned by workflow',
-      priority: 'Moderate' as const,
-      trust: 0,
-      reports: 0,
-      supporters: 0,
-      daysUnresolved: 0,
-      status: 'Filed' as const,
-      chaiHeat: 0,
+  const [issue, setIssue] = useState<IssueRecord | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/issues')
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Failed'))))
+      .then((payload) => {
+        if (!cancelled && Array.isArray(payload?.issues) && payload.issues.length > 0) {
+          setIssue(payload.issues[1] ?? payload.issues[0])
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIssue(null)
+      })
+
+    return () => {
+      cancelled = true
     }
+  }, [])
+
+  const currentIssue = issue ?? {
+    documentId: 'CC-READY-000001',
+    title: 'Community issue intake',
+    locality: 'Your neighbourhood',
+    description:
+      'This section will display a live civic issue as soon as the app receives data from the issue feed.',
+    department: 'Municipal operations',
+    pin: 'Local feed',
+    hub: 'Live system',
+    officer: 'Assigned by workflow',
+    priority: 'Moderate' as const,
+    trust: 0,
+    reports: 0,
+    supporters: 0,
+    daysUnresolved: 0,
+    status: 'Filed' as const,
+    chaiHeat: 0,
+    id: 'placeholder',
+    category: 'General',
+    createdAt: new Date().toISOString(),
+  }
 
   return (
     <section className="paper-grain">
@@ -47,34 +73,34 @@ export function ReportPreview() {
                   CivicChai Report
                 </p>
                 <p className="font-mono text-sm font-semibold">
-                  {issue.documentId}
+                  {currentIssue.documentId}
                 </p>
               </div>
             </div>
-            <PriorityBadge priority={issue.priority} />
+            <PriorityBadge priority={currentIssue.priority} />
           </div>
 
           <div className="grid gap-6 p-6 lg:grid-cols-[1.4fr_1fr]">
             <div>
               <h3 className="font-display text-xl font-extrabold text-charcoal">
-                {issue.title} — {issue.locality}
+                {currentIssue.title} — {currentIssue.locality}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-charcoal/70">
-                {issue.description}
+                {currentIssue.description}
               </p>
 
               <dl className="mt-5 grid grid-cols-2 gap-4 text-sm">
-                <Detail icon={Building2} k="Department" v={issue.department} />
-                <Detail icon={MapPin} k="PIN Hub" v={`${issue.pin} · ${issue.hub}`} />
-                <Detail icon={ShieldCheck} k="Officer / Office" v={issue.officer ?? 'Assigned by workflow'} />
+                <Detail icon={Building2} k="Department" v={currentIssue.department} />
+                <Detail icon={MapPin} k="PIN Hub" v={`${currentIssue.pin} · ${currentIssue.hub}`} />
+                <Detail icon={ShieldCheck} k="Officer / Office" v={currentIssue.officer ?? 'Assigned by workflow'} />
                 <Detail icon={Phone} k="Official Contact" v="Live routing via Supabase" />
               </dl>
 
               <div className="mt-5 flex flex-wrap items-center gap-3">
-                <TrustBadge trust={issue.trust} />
+                <TrustBadge trust={currentIssue.trust} />
                 <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 text-xs text-charcoal/70">
                   <FileText className="h-3.5 w-3.5" />
-                  {issue.reports} independent reports
+                  {currentIssue.reports} independent reports
                 </span>
               </div>
 
@@ -92,16 +118,16 @@ export function ReportPreview() {
             </div>
 
             <div className="rounded-2xl border border-border bg-background p-5">
-              <ChaiHeatMeter heat={issue.chaiHeat ?? 0} size="lg" />
+              <ChaiHeatMeter heat={currentIssue.chaiHeat ?? 0} size="lg" />
               <p className="mt-1 text-xs text-charcoal/60">
-                {issue.supporters.toLocaleString('en-IN')} supporters &middot;{' '}
-                {issue.daysUnresolved} days unresolved
+                {(currentIssue.supporters ?? 0).toLocaleString('en-IN')} supporters &middot;{' '}
+                {currentIssue.daysUnresolved} days unresolved
               </p>
               <div className="my-4 h-px bg-border" />
               <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-charcoal/50">
                 Tracking timeline
               </p>
-              <CivicTimeline status={issue.status} />
+              <CivicTimeline status={currentIssue.status} />
             </div>
           </div>
         </div>

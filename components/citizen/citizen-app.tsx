@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { SiteNav } from '@/components/landing/site-nav'
@@ -16,6 +16,7 @@ import { Home, Flame, ScrollText, User, Plus, WifiOff, ArrowRight } from 'lucide
 import { LOCALITY } from '@/lib/demo-data'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
 import { MapPin } from 'lucide-react'
+import type { IssueRecord } from '@/lib/types'
 
 type Tab = 'home' | 'tapri' | 'charcha' | 'profile'
 
@@ -29,6 +30,27 @@ const NAV: { key: Tab; label: string; icon: React.ElementType }[] = [
 export function CitizenApp() {
   const [tab, setTab] = useState<Tab>('home')
   const [composerOpen, setComposerOpen] = useState(false)
+  const [localHeat, setLocalHeat] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/issues')
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Failed'))))
+      .then((payload) => {
+        if (cancelled) return
+        const issues: IssueRecord[] = Array.isArray(payload?.issues) ? payload.issues : []
+        const topIssue = [...issues].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0))[0]
+        setLocalHeat(topIssue ? topIssue.chaiHeat : 82)
+      })
+      .catch(() => {
+        if (!cancelled) setLocalHeat(82)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <main className="min-h-dvh bg-background text-charcoal">
@@ -79,7 +101,7 @@ export function CitizenApp() {
                       {LOCALITY.name}
                     </p>
                   </div>
-                  <ChaiHeatMeter heat={82} size="md" showLabel={false} className="text-cream" />
+                  <ChaiHeatMeter heat={localHeat ?? 82} size="md" showLabel={false} className="text-cream" />
                 </div>
               </div>
               <p className="mt-4 text-sm leading-relaxed text-charcoal/65">

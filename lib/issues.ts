@@ -35,14 +35,14 @@ export async function getIssues(): Promise<IssueRecord[]> {
   const supabase = getSupabaseClient()
 
   if (!supabase) {
-    return fallbackIssues
+    return []
   }
 
   const { data, error } = await supabase.from('issues').select('*').order('created_at', { ascending: false })
 
   if (error) {
     console.error('getIssues error:', error)
-    return fallbackIssues
+    return []
   }
 
   return (data ?? []).map(normalizeIssue)
@@ -52,14 +52,14 @@ export async function getIssueById(id: string): Promise<IssueRecord | null> {
   const supabase = getSupabaseClient()
 
   if (!supabase) {
-    return fallbackIssues.find((item) => item.id === id) ?? null
+    return null
   }
 
   const { data, error } = await supabase.from('issues').select('*').eq('id', id).single()
 
   if (error) {
     console.error('getIssueById error:', error)
-    return fallbackIssues.find((item) => item.id === id) ?? null
+    return null
   }
 
   return normalizeIssue(data)

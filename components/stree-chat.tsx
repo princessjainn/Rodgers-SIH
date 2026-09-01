@@ -59,6 +59,7 @@ export function StreeChat() {
   const [isOffline, setIsOffline] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [webllmStatus, setWebllmStatus] = useState<'idle' | 'ready' | 'fallback'>('idle')
+  const engineRef = useRef<any>(null)
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -81,7 +82,10 @@ export function StreeChat() {
 
     async function initWebllm() {
       if (typeof window === 'undefined') return
-      if (!('gpu' in navigator)) return
+      if (!('gpu' in navigator) || !navigator.gpu) {
+        if (!cancelled) setWebllmStatus('fallback')
+        return
+      }
 
       try {
         const engineModule = await import('@mlc-ai/web-llm')
@@ -89,15 +93,17 @@ export function StreeChat() {
 
         if (cancelled) return
 
-        const engine = await CreateMLCEngine('Llama-3.1-8B-Instruct-q4f32_1-MLC', {
+        const engine = await CreateMLCEngine('Llama-3.2-1B-Instruct-q4f16_1-MLC', {
           initProgressCallback: () => undefined,
         })
 
         if (!cancelled) {
+          engineRef.current = engine
           setWebllmStatus('ready')
           ;(engine as { setLogLevel?: (level: string) => void })?.setLogLevel?.('INFO')
         }
-      } catch {
+      } catch (error) {
+        console.warn('WebLLM failed to initialize:', error)
         if (!cancelled) setWebllmStatus('fallback')
       }
     }
@@ -131,21 +137,27 @@ export function StreeChat() {
     try {
       let response = buildReply(trimmed)
 
-      if (webllmStatus === 'ready' && typeof window !== 'undefined') {
+      if (webllmStatus === 'ready' && engineRef.current && typeof window !== 'undefined') {
         try {
-          const engineModule = await import('@mlc-ai/web-llm')
-          const { CreateMLCEngine } = engineModule
-          const engine = await CreateMLCEngine('Llama-3.1-8B-Instruct-q4f32_1-MLC')
-          const result = await engine.chat.completions.create({
+          const result = await engineRef.current.chat.completions.create({
             messages: [
-              { role: 'user', content: `You are STREE, an offline civic AI assistant for Indian local governance. Keep answers concise, practical, and civic-focused. User input: ${trimmed}` },
+              {
+                role: 'user',
+                content: `You are STREE, an offline civic AI assistant for Indian local governance. Keep answers concise, practical, and civic-focused. User input: ${trimmed}`,
+              },
             ],
             temperature: 0.5,
             max_tokens: 180,
           })
-          response = result.choices?.[0]?.message?.content || response
-        } catch {
+
+          const content = result?.choices?.[0]?.message?.content
+          if (typeof content === 'string' && content.trim()) {
+            response = content.trim()
+          }
+        } catch (error) {
+          console.warn('WebLLM chat generation failed:', error)
           response = buildReply(trimmed)
+          setWebllmStatus('fallback')
         }
       }
 

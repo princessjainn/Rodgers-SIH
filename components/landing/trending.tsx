@@ -1,11 +1,34 @@
-import { ISSUES, LOCALITY } from '@/lib/demo-data'
+import { LOCALITY } from '@/lib/demo-data'
 import { ChaiCard } from '@/components/brand/chai-card'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
 import { PriorityBadge } from '@/components/brand/badges'
 import { MapPin, TrendingUp } from 'lucide-react'
+import type { IssueRecord } from '@/lib/types'
+import { useEffect, useState } from 'react'
 
 export function LocalChai() {
-  const featured = ISSUES.slice(0, 3)
+  const [issues, setIssues] = useState<IssueRecord[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/issues')
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Failed'))))
+      .then((payload) => {
+        if (!cancelled && Array.isArray(payload?.issues)) {
+          setIssues(payload.issues)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIssues([])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const featured = issues.slice(0, 3)
   const tags = ['potholes', 'garbage', 'streetlights', 'drainage', 'water', 'traffic']
   return (
     <section id="local-chai" className="paper-grain">
@@ -46,7 +69,28 @@ export function LocalChai() {
 }
 
 export function ChaiTapri() {
-  const ranked = [...ISSUES].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0)).slice(0, 4)
+  const [issues, setIssues] = useState<IssueRecord[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/issues')
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Failed'))))
+      .then((payload) => {
+        if (!cancelled && Array.isArray(payload?.issues)) {
+          setIssues(payload.issues)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIssues([])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const ranked = [...issues].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0)).slice(0, 4)
   return (
     <section id="tapri" className="border-y border-border bg-card">
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">

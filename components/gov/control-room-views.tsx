@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { ISSUES } from '@/lib/demo-data'
 import type { IssueRecord } from '@/lib/types'
 import { PriorityBadge, StatusBadge, TrustBadge } from '@/components/brand/badges'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
@@ -124,7 +123,7 @@ export function OverviewView() {
 export function ComplaintsView() {
   const [selected, setSelected] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const [issues, setIssues] = useState<IssueRecord[]>(ISSUES)
+  const [issues, setIssues] = useState<IssueRecord[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -138,7 +137,7 @@ export function ComplaintsView() {
         }
       })
       .catch(() => {
-        if (!cancelled) setIssues(ISSUES)
+        if (!cancelled) setIssues([])
       })
 
     return () => {

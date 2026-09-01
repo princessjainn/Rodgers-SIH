@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
-import { ISSUES, LOCALITY } from '@/lib/demo-data'
+import { LOCALITY } from '@/lib/demo-data'
 import type { IssueRecord } from '@/lib/types'
 import { fetchIssuesWithCache } from '@/lib/offline-cache'
 import { ChaiCard } from '@/components/brand/chai-card'
@@ -21,7 +21,7 @@ import {
 
 /* ---------------- Local Chai (Home feed) ---------------- */
 export function LocalChaiView() {
-  const [issues, setIssues] = useState<IssueRecord[]>(ISSUES)
+  const [issues, setIssues] = useState<IssueRecord[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -35,7 +35,7 @@ export function LocalChaiView() {
         setIssues(cachedIssues as IssueRecord[])
       }
     }).catch(() => {
-      if (!cancelled) setIssues(ISSUES)
+      if (!cancelled) setIssues([])
     })
 
     return () => {
@@ -59,7 +59,7 @@ const TABS = ['Hottest', 'Rising', 'Nearby', 'Unresolved'] as const
 
 export function ChaiTapriView() {
   const [tab, setTab] = useState<(typeof TABS)[number]>('Hottest')
-  const [issues, setIssues] = useState<IssueRecord[]>(ISSUES)
+  const [issues, setIssues] = useState<IssueRecord[]>([])
 
   useEffect(() => {
     let cancelled = false
@@ -73,7 +73,7 @@ export function ChaiTapriView() {
         setIssues(cachedIssues as IssueRecord[])
       }
     }).catch(() => {
-      if (!cancelled) setIssues(ISSUES)
+      if (!cancelled) setIssues([])
     })
 
     return () => {
@@ -143,8 +143,8 @@ const MY_TABS = ['Filed', 'Tracking', 'Upvoted', 'Resolved'] as const
 
 export function MyCharchaView() {
   const [tab, setTab] = useState<(typeof MY_TABS)[number]>('Tracking')
-  const [issues, setIssues] = useState<IssueRecord[]>(ISSUES)
-  const [active, setActive] = useState<IssueRecord>(ISSUES[1] ?? ISSUES[0])
+  const [issues, setIssues] = useState<IssueRecord[]>([])
+  const [active, setActive] = useState<IssueRecord | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -159,13 +159,15 @@ export function MyCharchaView() {
         setActive((cachedIssues as IssueRecord[])[1] ?? (cachedIssues as IssueRecord[])[0])
       }
     }).catch(() => {
-      if (!cancelled) setIssues(ISSUES)
+      if (!cancelled) setIssues([])
     })
 
     return () => {
       cancelled = true
     }
   }, [])
+
+  const activeIssue = active ?? issues[0] ?? null
 
   return (
     <div className="space-y-5">
@@ -194,7 +196,7 @@ export function MyCharchaView() {
               onClick={() => setActive(issue)}
               className={cn(
                 'flex w-full items-center gap-3 rounded-2xl border bg-card p-4 text-left transition-colors',
-                active.id === issue.id ? 'border-chai shadow-sm' : 'border-border',
+                activeIssue?.id === issue.id ? 'border-chai shadow-sm' : 'border-border',
               )}
             >
               <div className="min-w-0 flex-1">
@@ -211,18 +213,24 @@ export function MyCharchaView() {
           ))}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <p className="font-mono text-xs text-charcoal/50">{active.id}</p>
-          <p className="mt-1 font-display text-xl font-bold text-charcoal">{active.title}</p>
-          <p className="mt-2 text-sm leading-relaxed text-charcoal/70">{active.description}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <StatusBadge status={active.status} />
-            <PriorityBadge priority={active.priority} />
+        {activeIssue ? (
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <p className="font-mono text-xs text-charcoal/50">{activeIssue.id}</p>
+            <p className="mt-1 font-display text-xl font-bold text-charcoal">{activeIssue.title}</p>
+            <p className="mt-2 text-sm leading-relaxed text-charcoal/70">{activeIssue.description}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <StatusBadge status={activeIssue.status} />
+              <PriorityBadge priority={activeIssue.priority} />
+            </div>
+            <div className="mt-6">
+              <CivicTimeline status={activeIssue.status} />
+            </div>
           </div>
-          <div className="mt-6">
-            <CivicTimeline status={active.status} />
+        ) : (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-6 text-sm text-charcoal/60">
+            No issues are available in the live feed yet.
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

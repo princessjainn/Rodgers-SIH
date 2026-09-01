@@ -2,13 +2,13 @@ import Link from 'next/link'
 import { ArrowRight, Flame, TrendingUp } from 'lucide-react'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
 import { PriorityBadge } from '@/components/brand/badges'
-import { ISSUES } from '@/lib/demo-data'
 import { SiteFooter } from '@/components/landing/site-footer'
 import { SiteNav } from '@/components/landing/site-nav'
+import { getIssues } from '@/lib/issues'
 
-const ranked = [...ISSUES].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0)).slice(0, 6)
-
-export default function ChaiTapriPage() {
+export default async function ChaiTapriPage() {
+  const issues = await getIssues()
+  const ranked = [...issues].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0)).slice(0, 6)
   return (
     <main className="min-h-dvh bg-background text-charcoal">
       <SiteNav />
