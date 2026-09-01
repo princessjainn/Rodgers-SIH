@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { analyzeComplaintRequest } from '@/lib/ai'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
 import {
   X,
@@ -23,10 +24,70 @@ export function Composer({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState<Step>('compose')
   const [text, setText] = useState('')
   const [lang, setLang] = useState('Auto Detect')
+  const [analysis, setAnalysis] = useState<Awaited<ReturnType<typeof analyzeComplaintRequest>> | null>(null)
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
 
-  function analyze() {
+  const documentId = useMemo(
+    () => `CC-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 9000 + 1000)}`,
+    [],
+  )
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const SpeechRecognition = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) return
+
+    const recognition = new SpeechRecognition()
+    recognition.lang = lang === 'Auto Detect' ? 'en-IN' : 'en-IN'
+    recognition.interimResults = true
+    recognition.continuous = false
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((result: any) => result[0]?.transcript ?? '')
+        .join(' ')
+        .trim()
+
+      if (transcript) {
+        setText((current) => (current ? `${current} ${transcript}` : transcript))
+      }
+    }
+
+    recognition.onend = () => setIsListening(false)
+    recognition.onerror = () => setIsListening(false)
+
+    recognitionRef.current = recognition
+
+    return () => {
+      recognition.stop()
+    }
+  }, [lang])
+
+  async function analyze() {
+    if (!text.trim()) return
     setStep('analyzing')
-    setTimeout(() => setStep('result'), 1800)
+    const result = await analyzeComplaintRequest(text, lang)
+    setAnalysis(result)
+    setStep(result.duplicateIssueFound ? 'duplicate' : 'result')
+  }
+
+  function toggleVoice() {
+    const SpeechRecognition = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition || !recognitionRef.current) {
+      setText((current) => current || 'Voice input is not supported in this browser. Please type your complaint.')
+      return
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop()
+      setIsListening(false)
+      return
+    }
+
+    recognitionRef.current.start()
+    setIsListening(true)
   }
 
   return (
@@ -52,13 +113,21 @@ export function Composer({ onClose }: { onClose: () => void }) {
           {(step === 'compose' || step === 'analyzing') && (
             <div className="space-y-4">
               <button
-                className="flex w-full flex-col items-center gap-2 rounded-2xl border border-dashed border-terracotta/50 bg-terracotta/5 py-6 text-terracotta transition-colors hover:bg-terracotta/10"
+                onClick={toggleVoice}
+                className={cn(
+                  'flex w-full flex-col items-center gap-2 rounded-2xl border border-dashed py-6 text-terracotta transition-colors',
+                  isListening
+                    ? 'border-terracotta bg-terracotta/15'
+                    : 'border-terracotta/50 bg-terracotta/5 hover:bg-terracotta/10',
+                )}
                 aria-label="Record your complaint by voice"
               >
                 <span className="flex h-14 w-14 items-center justify-center rounded-full bg-terracotta text-cream shadow-sm">
-                  <Mic className="h-6 w-6" />
+                  <Mic className={cn('h-6 w-6', isListening && 'animate-pulse')} />
                 </span>
-                <span className="text-sm font-semibold">Tap to record</span>
+                <span className="text-sm font-semibold">
+                  {isListening ? 'Listening… speak now' : 'Tap to record'}
+                </span>
               </button>
 
               <textarea
@@ -130,7 +199,7 @@ export function Composer({ onClose }: { onClose: () => void }) {
             </div>
           )}
 
-          {step === 'result' && (
+          {step === 'result' && analysis && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-semibold text-chai">
                 <Sparkles className="h-4 w-4" />
@@ -138,12 +207,12 @@ export function Composer({ onClose }: { onClose: () => void }) {
               </div>
               <dl className="rounded-2xl border border-border bg-card p-4 text-sm">
                 {[
-                  ['Language', 'Hinglish'],
-                  ['Category', 'Public Lighting'],
-                  ['Issue', 'Streetlight outage'],
-                  ['Location', 'PIN 401208'],
-                  ['Department', 'Municipal Public Lighting'],
-                  ['Priority', 'High'],
+                  ['Language', analysis.language],
+                  ['Category', analysis.category],
+                  ['Issue', analysis.issue],
+                  ['Location', analysis.location],
+                  ['Department', analysis.department],
+                  ['Priority', analysis.priority],
                 ].map(([k, v]) => (
                   <div
                     key={k}
@@ -156,20 +225,20 @@ export function Composer({ onClose }: { onClose: () => void }) {
                 <div className="flex items-center justify-between pt-2">
                   <dt className="text-charcoal/60">Report confidence</dt>
                   <dd className="rounded-md bg-leaf/15 px-2 py-0.5 font-semibold text-leaf">
-                    82%
+                    {analysis.confidence}%
                   </dd>
                 </div>
               </dl>
               <button
-                onClick={() => setStep('duplicate')}
+                onClick={() => setStep('done')}
                 className="w-full rounded-xl bg-chai px-4 py-3 text-sm font-semibold text-cream"
               >
-                Continue
+                Create report
               </button>
             </div>
           )}
 
-          {step === 'duplicate' && (
+          {step === 'duplicate' && analysis?.duplicateIssue && (
             <div className="space-y-4">
               <div className="rounded-2xl border border-gold/40 bg-gold/10 p-4">
                 <p className="font-display font-bold text-charcoal">
@@ -181,15 +250,15 @@ export function Composer({ onClose }: { onClose: () => void }) {
               </div>
               <div className="rounded-2xl border border-border bg-card p-4">
                 <p className="font-display font-bold text-charcoal">
-                  Streetlights not working on Station Road
+                  {analysis.duplicateIssue.title}
                 </p>
                 <p className="text-xs text-charcoal/60">
-                  PIN 401208 &middot; Assigned
+                  PIN {analysis.duplicateIssue.pin} &middot; {analysis.duplicateIssue.status}
                 </p>
                 <div className="mt-3 flex items-center justify-between">
-                  <ChaiHeatMeter heat={86} size="sm" />
+                  <ChaiHeatMeter heat={analysis.duplicateIssue.chaiHeat} size="sm" />
                   <span className="text-xs text-charcoal/60">
-                    52 reports &middot; 1,842 supporters
+                    {analysis.duplicateIssue.reports} reports &middot; {analysis.duplicateIssue.supporters} supporters
                   </span>
                 </div>
               </div>
@@ -219,11 +288,11 @@ export function Composer({ onClose }: { onClose: () => void }) {
                   Charcha shuru ho gayi!
                 </p>
                 <p className="mt-1 text-sm text-charcoal/60">
-                  Your support was added. Track it in My Charcha.
+                  {analysis ? analysis.summary : 'Your support was added. Track it in My Charcha.'}
                 </p>
               </div>
               <p className="font-mono text-sm font-semibold text-chai">
-                CC-401208-2026-0001731
+                {documentId}
               </p>
               <button
                 onClick={onClose}

@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Inter, Manrope, Noto_Sans_Devanagari } from 'next/font/google'
+import { PwaRegister } from '@/components/pwa-register'
 import './globals.css'
 
 const inter = Inter({
@@ -27,11 +28,20 @@ export const metadata: Metadata = {
   description:
     'CivicChai turns everyday civic problems into community discussions. Report karo, charcha karo, vote karo — aur dekho tumhari awaaz kahan tak pahunchti hai.',
   generator: 'v0.app',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'CivicChai',
+    statusBarStyle: 'default',
+  },
 }
 
 export const viewport: Viewport = {
   themeColor: '#6b3f24',
   colorScheme: 'light',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
@@ -45,6 +55,7 @@ export default function RootLayout({
       className={`${inter.variable} ${manrope.variable} ${notoDeva.variable} bg-background`}
     >
       <body className="antialiased">
+        <PwaRegister />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
