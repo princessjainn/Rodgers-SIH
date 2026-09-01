@@ -162,6 +162,37 @@ export async function analyzeComplaintRequest(input: string, detectedLanguage = 
   }
 }
 
+function parseGroqJsonContent(content: unknown): Record<string, unknown> {
+  if (typeof content !== 'string') {
+    return {}
+  }
+
+  const trimmed = content.trim()
+  if (!trimmed) {
+    return {}
+  }
+
+  const withoutCodeFence = trimmed.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '')
+  const candidate = withoutCodeFence || trimmed
+
+  try {
+    return JSON.parse(candidate) as Record<string, unknown>
+  } catch {
+    const start = candidate.indexOf('{')
+    const end = candidate.lastIndexOf('}')
+
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse(candidate.slice(start, end + 1)) as Record<string, unknown>
+      } catch {
+        return {}
+      }
+    }
+
+    return {}
+  }
+}
+
 export async function analyzeComplaintWithGroq(
   input: string,
   detectedLanguage = 'Auto Detect',
@@ -169,8 +200,8 @@ export async function analyzeComplaintWithGroq(
   const trimmed = input.trim()
   if (!trimmed) return analyzeComplaint(trimmed, detectedLanguage)
 
-  const apiKey = process.env.GROQ_API_KEY
-  const model = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile'
+  const apiKey = process.env.GROQ_API_KEY ?? process.env.NEXT_PUBLIC_GROQ_API_KEY
+  const model = process.env.GROQ_MODEL ?? process.env.NEXT_PUBLIC_GROQ_MODEL ?? 'llama-3.3-70b-versatile'
 
   if (!apiKey) {
     return analyzeComplaint(trimmed, detectedLanguage)
@@ -210,7 +241,7 @@ export async function analyzeComplaintWithGroq(
 
     const data = await response.json()
     const messageContent = data?.choices?.[0]?.message?.content ?? '{}'
-    const parsed = JSON.parse(messageContent)
+    const parsed = parseGroqJsonContent(messageContent)
 
     const fallback = analyzeComplaint(trimmed, detectedLanguage)
 
