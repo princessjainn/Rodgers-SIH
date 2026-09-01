@@ -1,16 +1,15 @@
 # Supabase setup for CivicChai
 
-Run the SQL files in this folder in this order:
+Use the single file in this folder:
 
-1. `schema.sql`
-2. `policies.sql`
-3. `seed.sql`
+- `schema.sql`
 
-This creates the profile, issue, comment, support, and audit tables needed for the CivicChai workflow.
+This file includes the table definitions, indexes, triggers, row-level security policies, and seed data required for the CivicChai workflow.
 
-For migration-based workflows, use a project migration folder instead of the root schema file when you are ready to version control your database schema.
-
-Environment variables needed in Vercel:
+Environment variables needed in Vercel or local development:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (server-side only)
+
+Use the migration folder as an optional versioned alternative if you want schema tracking in a SQL migration workflow.

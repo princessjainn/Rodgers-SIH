@@ -19,7 +19,30 @@ import {
 
 type Step = 'compose' | 'analyzing' | 'result' | 'duplicate' | 'done'
 
+type SpeechRecognitionCtor = new () => {
+  lang: string
+  interimResults: boolean
+  continuous: boolean
+  start: () => void
+  stop: () => void
+  onresult: ((event: any) => void) | null
+  onend: (() => void) | null
+  onerror: ((event: any) => void) | null
+  onstart: (() => void) | null
+}
+
 const LANGS = ['Auto Detect', 'English', 'हिन्दी', 'मराठी']
+
+function getSpeechRecognition(): SpeechRecognitionCtor | null {
+  if (typeof window === 'undefined') return null
+
+  const browserWindow = window as Window & {
+    SpeechRecognition?: SpeechRecognitionCtor
+    webkitSpeechRecognition?: SpeechRecognitionCtor
+  }
+
+  return browserWindow.SpeechRecognition ?? browserWindow.webkitSpeechRecognition ?? null
+}
 
 export function Composer({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState<Step>('compose')
@@ -36,9 +59,7 @@ export function Composer({ onClose }: { onClose: () => void }) {
   )
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    const SpeechRecognition = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition
+    const SpeechRecognition = getSpeechRecognition()
     if (!SpeechRecognition) return
 
     const recognition = new SpeechRecognition()
@@ -85,9 +106,7 @@ export function Composer({ onClose }: { onClose: () => void }) {
   }
 
   function toggleVoice() {
-    if (typeof window === 'undefined') return
-
-    const SpeechRecognition = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition
+    const SpeechRecognition = getSpeechRecognition()
     if (!SpeechRecognition || !recognitionRef.current) {
       setText((current) => current || 'Voice input is not supported in this browser. Please type your complaint.')
       return
