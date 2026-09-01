@@ -49,4 +49,7 @@ export interface CreateIssueInput {
   priority?: IssuePriority
   officer?: string
   hub?: string
+  image_url?: string
+  image_urls?: string[]
+  evidence?: string[]
 }

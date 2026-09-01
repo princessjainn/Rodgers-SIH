@@ -51,7 +51,11 @@ export function Composer({ onClose }: { onClose: () => void }) {
   const [analysis, setAnalysis] = useState<Awaited<ReturnType<typeof analyzeComplaintRequest>> | null>(null)
   const [isListening, setIsListening] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [proofUrls, setProofUrls] = useState<string[]>([])
+  const [locationLabel, setLocationLabel] = useState('')
+  const [isLocating, setIsLocating] = useState(false)
   const recognitionRef = useRef<any>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const documentId = useMemo(
     () => `CC-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 9000 + 1000)}`,
@@ -126,22 +130,81 @@ export function Composer({ onClose }: { onClose: () => void }) {
     }
   }
 
+  function handleProofSelection(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? [])
+    if (!files.length) return
+
+    Promise.all(
+      files.map(
+        (file) =>
+          new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(String(reader.result ?? ''))
+            reader.onerror = () => reject(new Error(`Unable to read ${file.name}`))
+            reader.readAsDataURL(file)
+          }),
+      ),
+    )
+      .then((dataUrls) => {
+        setProofUrls((current) => [...current, ...dataUrls])
+      })
+      .catch((error) => {
+        console.error('Failed to read proof files', error)
+      })
+      .finally(() => {
+        if (event.target) event.target.value = ''
+      })
+  }
+
+  function handleLocationCapture() {
+    if (!navigator.geolocation) {
+      setLocationLabel('Location permission unavailable')
+      return
+    }
+
+    setIsLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords
+        const label = `Current location • ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+        setLocationLabel(label)
+        setIsLocating(false)
+      },
+      () => {
+        setLocationLabel('Location unavailable • using nearest civic area')
+        setIsLocating(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    )
+  }
+
+  function handleCallCivicChai() {
+    if (typeof window !== 'undefined') {
+      window.location.href = 'tel:+919999999999'
+    }
+  }
+
   async function submitReport() {
     if (!analysis) return
 
     setIsSubmitting(true)
     try {
+      const extractedPin = analysis.location.match(/\d{6}/)?.[0] ?? '401208'
+      const locality = locationLabel || analysis.location.replace(/PIN\s*\d{6}\s*·\s*/i, '').trim() || 'Market Square'
       const payload = {
         title: analysis.issue,
         description: text.trim(),
         category: analysis.category,
         department: analysis.department,
-        pin: analysis.location.match(/\d{6}/)?.[0] ?? '401208',
-        locality: analysis.location.replace(/PIN\s*\d{6}\s*·\s*/i, '').trim() || 'Market Square',
+        pin: extractedPin,
+        locality,
         status: 'Filed' as const,
         priority: analysis.priority,
         officer: 'Unassigned',
         hub: 'Ward Operations Hub',
+        image_url: proofUrls[0] ?? undefined,
+        image_urls: proofUrls.length ? proofUrls : undefined,
+        evidence: proofUrls.length ? proofUrls : undefined,
       }
 
       const response = await fetch('/api/issues', {
@@ -232,16 +295,27 @@ export function Composer({ onClose }: { onClose: () => void }) {
                 ))}
               </div>
 
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleProofSelection}
+              />
+
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  [Camera, 'Add Proof'],
-                  [MapPin, 'Location'],
-                  [Phone, 'Call CivicChai'],
-                ].map(([Icon, label], i) => {
+                  [Camera, 'Add Proof', () => fileInputRef.current?.click()],
+                  [MapPin, 'Location', handleLocationCapture],
+                  [Phone, 'Call CivicChai', handleCallCivicChai],
+                ].map(([Icon, label, onClick], i) => {
                   const I = Icon as React.ElementType
                   return (
                     <button
                       key={i}
+                      type="button"
+                      onClick={onClick as () => void}
                       className="flex flex-col items-center gap-1 rounded-xl border border-border bg-card py-3 text-xs font-medium text-charcoal/70 hover:border-chai/40"
                     >
                       <I className="h-4 w-4 text-chai" />
@@ -250,6 +324,26 @@ export function Composer({ onClose }: { onClose: () => void }) {
                   )
                 })}
               </div>
+
+              {(proofUrls.length > 0 || locationLabel) && (
+                <div className="space-y-2 rounded-xl border border-dashed border-border bg-card p-3">
+                  {proofUrls.length > 0 && (
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {proofUrls.map((url, index) => (
+                        <img
+                          key={`${url}-${index}`}
+                          src={url}
+                          alt={`Complaint proof ${index + 1}`}
+                          className="h-16 w-16 rounded-lg object-cover"
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {locationLabel && (
+                    <p className="text-xs text-charcoal/60">Location: {locationLabel}</p>
+                  )}
+                </div>
+              )}
 
               <button
                 onClick={analyze}
@@ -340,14 +434,24 @@ export function Composer({ onClose }: { onClose: () => void }) {
                 </div>
               </div>
               <button
-                onClick={() => setStep('done')}
+                onClick={() => {
+                  setAnalysis((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          summary: 'Support registered for the existing civic issue. The same concern is being tracked for community action.',
+                        }
+                      : prev,
+                  )
+                  setStep('done')
+                }}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-heat px-4 py-3 text-sm font-semibold text-heat-foreground"
               >
                 <Flame className="h-4 w-4" />
                 Is Charcha ko Support Karo
               </button>
               <button
-                onClick={() => setStep('done')}
+                onClick={() => setStep('compose')}
                 className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-charcoal"
               >
                 Yeh alag problem hai

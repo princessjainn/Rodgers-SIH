@@ -21,6 +21,9 @@ export async function POST(request: Request) {
       priority: body.priority,
       officer: body.officer,
       hub: body.hub,
+      image_url: body.image_url,
+      image_urls: Array.isArray(body.image_urls) ? body.image_urls : Array.isArray(body.evidence) ? body.evidence : undefined,
+      evidence: Array.isArray(body.evidence) ? body.evidence : undefined,
     })
 
     return NextResponse.json(issue, { status: 201 })

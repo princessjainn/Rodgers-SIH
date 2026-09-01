@@ -58,9 +58,21 @@ create table if not exists public.issues (
   officer text,
   hub text,
   image_url text,
+  evidence_urls text[] default '{}'::text[],
+  location_lat numeric(9,6),
+  location_lng numeric(9,6),
   created_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+create table if not exists public.issue_evidence (
+  id uuid primary key default gen_random_uuid(),
+  issue_id uuid not null references public.issues(id) on delete cascade,
+  image_url text not null,
+  caption text,
+  uploaded_by uuid references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now()
 );
 
 create table if not exists public.issue_comments (
@@ -117,6 +129,7 @@ create index if not exists idx_issues_created_at on public.issues(created_at des
 create index if not exists idx_issue_comments_issue_id on public.issue_comments(issue_id, created_at desc);
 create index if not exists idx_issue_supports_issue_id on public.issue_supports(issue_id);
 create index if not exists idx_audit_logs_issue_id on public.audit_logs(issue_id, created_at desc);
+create index if not exists idx_issue_evidence_issue_id on public.issue_evidence(issue_id, created_at desc);
 create index if not exists idx_officer_registry_pin on public.officer_registry(pin, department);
 
 create or replace function public.handle_updated_at()

@@ -26,6 +26,7 @@ function normalizeIssue(row: Record<string, any>): IssueRecord {
     officer: String(row.officer ?? 'Unassigned'),
     hub: String(row.hub ?? 'Ward Operations Hub'),
     image: row.image_url ?? row.image,
+    image_url: row.image_url ?? row.image,
     createdAt: String(row.created_at ?? row.createdAt ?? new Date().toISOString()),
   }
 }
@@ -79,6 +80,8 @@ export async function createIssue(input: CreateIssueInput): Promise<IssueRecord>
     officer: input.officer ?? 'Unassigned',
     hub: input.hub ?? 'Ward Operations Hub',
     document_id: `CC-${Date.now()}`,
+    image_url: input.image_url ?? input.image_urls?.[0] ?? null,
+    evidence_urls: input.image_urls ?? input.evidence ?? [],
     trust: 0,
     chai_heat: 0,
     supporters: 0,
@@ -107,6 +110,8 @@ export async function createIssue(input: CreateIssueInput): Promise<IssueRecord>
       daysUnresolved: 0,
       officer: payload.officer,
       hub: payload.hub,
+      image: payload.image_url ?? undefined,
+      image_url: payload.image_url ?? undefined,
       createdAt: new Date().toISOString(),
     }
     return issue

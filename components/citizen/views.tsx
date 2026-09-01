@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ISSUES, LOCALITY } from '@/lib/demo-data'
 import type { IssueRecord } from '@/lib/types'
+import { fetchIssuesWithCache } from '@/lib/offline-cache'
 import { ChaiCard } from '@/components/brand/chai-card'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
 import { CivicTimeline } from '@/components/brand/civic-timeline'
@@ -25,16 +26,17 @@ export function LocalChaiView() {
   useEffect(() => {
     let cancelled = false
 
-    fetch('/api/issues')
-      .then((res) => res.ok ? res.json() : Promise.reject(new Error('Failed')))
-      .then((payload) => {
-        if (!cancelled && Array.isArray(payload?.issues)) {
-          setIssues(payload.issues)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setIssues(ISSUES)
-      })
+    fetchIssuesWithCache(async () => {
+      const res = await fetch('/api/issues')
+      if (!res.ok) throw new Error('Failed')
+      return res.json()
+    }).then((cachedIssues) => {
+      if (!cancelled && Array.isArray(cachedIssues) && cachedIssues.length > 0) {
+        setIssues(cachedIssues as IssueRecord[])
+      }
+    }).catch(() => {
+      if (!cancelled) setIssues(ISSUES)
+    })
 
     return () => {
       cancelled = true
@@ -62,16 +64,17 @@ export function ChaiTapriView() {
   useEffect(() => {
     let cancelled = false
 
-    fetch('/api/issues')
-      .then((res) => res.ok ? res.json() : Promise.reject(new Error('Failed')))
-      .then((payload) => {
-        if (!cancelled && Array.isArray(payload?.issues)) {
-          setIssues(payload.issues)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setIssues(ISSUES)
-      })
+    fetchIssuesWithCache(async () => {
+      const res = await fetch('/api/issues')
+      if (!res.ok) throw new Error('Failed')
+      return res.json()
+    }).then((cachedIssues) => {
+      if (!cancelled && Array.isArray(cachedIssues) && cachedIssues.length > 0) {
+        setIssues(cachedIssues as IssueRecord[])
+      }
+    }).catch(() => {
+      if (!cancelled) setIssues(ISSUES)
+    })
 
     return () => {
       cancelled = true
@@ -146,17 +149,18 @@ export function MyCharchaView() {
   useEffect(() => {
     let cancelled = false
 
-    fetch('/api/issues')
-      .then((res) => res.ok ? res.json() : Promise.reject(new Error('Failed')))
-      .then((payload) => {
-        if (!cancelled && Array.isArray(payload?.issues) && payload.issues.length > 0) {
-          setIssues(payload.issues)
-          setActive(payload.issues[1] ?? payload.issues[0])
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setIssues(ISSUES)
-      })
+    fetchIssuesWithCache(async () => {
+      const res = await fetch('/api/issues')
+      if (!res.ok) throw new Error('Failed')
+      return res.json()
+    }).then((cachedIssues) => {
+      if (!cancelled && Array.isArray(cachedIssues) && cachedIssues.length > 0) {
+        setIssues(cachedIssues as IssueRecord[])
+        setActive((cachedIssues as IssueRecord[])[1] ?? (cachedIssues as IssueRecord[])[0])
+      }
+    }).catch(() => {
+      if (!cancelled) setIssues(ISSUES)
+    })
 
     return () => {
       cancelled = true

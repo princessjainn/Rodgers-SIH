@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Inter, Manrope, Noto_Sans_Devanagari } from 'next/font/google'
 import { PwaRegister } from '@/components/pwa-register'
+import { StreeChat } from '@/components/stree-chat'
 import './globals.css'
 
 const inter = Inter({
@@ -57,6 +58,7 @@ export default function RootLayout({
       <body className="antialiased">
         <PwaRegister />
         {children}
+        <StreeChat />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -1,0 +1,256 @@
+'use client'
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { MessageSquareText, Send, Sparkles, Wifi, WifiOff, X } from 'lucide-react'
+
+const OFFLINE_RESPONSES = [
+  'STREE here: I can help summarize civic issues, explain nearby hotspots, and suggest what to report next.',
+  'If your issue is about streetlights, drainage, water, garbage, or roads, I can help organize the complaint and suggest next steps.',
+  'Offline mode is active. I can still answer with local civic guidance and keep your last findings ready in this browser.',
+  'Try asking: “Streetlight outage near Station Road” or “What should I report for blocked drains?”',
+]
+
+type ChatMessage = {
+  id: number
+  role: 'assistant' | 'user'
+  text: string
+}
+
+function buildReply(input: string) {
+  const normalized = input.toLowerCase()
+
+  if (/streetlight|light|electric|power/.test(normalized)) {
+    return 'Streetlight issue detected. Report the exact location, whether the pole is damaged, and whether the outage is affecting a public road or crossing.'
+  }
+
+  if (/drain|water|sewer|clog|block/.test(normalized)) {
+    return 'Drainage or water issue: note the exact blocked location, local imagery, and any risk to pedestrians or homes. This should be routed to the relevant local engineering team.'
+  }
+
+  if (/garbage|waste|trash|dump/.test(normalized)) {
+    return 'Solid waste issue: mention the collection point, frequency, and whether the area is near a school, market, or residential cluster.'
+  }
+
+  if (/road|pothole|traffic|speed/.test(normalized)) {
+    return 'Road safety issue: include the lane, visibility issue, and whether the defect creates a risk to motorists or pedestrians.'
+  }
+
+  if (/duplicate|similar|already reported/.test(normalized)) {
+    return 'Before filing a new complaint, check whether a nearby issue already exists. A duplicate can be linked instead of recreated when the location and problem match.'
+  }
+
+  if (/hotspot|nearby|locality|pin/.test(normalized)) {
+    return 'Locality-first reporting is best. Share the neighbourhood, PIN, and landmark so the issue can be matched to the right ward and department.'
+  }
+
+  return 'STREE can help you structure a civic report: include the locality, exact issue, evidence, and urgency. If you want, I can help draft the complaint text.'
+}
+
+export function StreeChat() {
+  const [open, setOpen] = useState(true)
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 1,
+      role: 'assistant',
+      text: 'Namaste. I am STREE, your civic co-pilot. Ask me about a local issue, and I will help summarize it for faster action.',
+    },
+  ])
+  const [input, setInput] = useState('')
+  const [isOffline, setIsOffline] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [webllmStatus, setWebllmStatus] = useState<'idle' | 'ready' | 'fallback'>('idle')
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const updateStatus = () => {
+      setIsOffline(!navigator.onLine)
+    }
+
+    updateStatus()
+    window.addEventListener('online', updateStatus)
+    window.addEventListener('offline', updateStatus)
+
+    return () => {
+      window.removeEventListener('online', updateStatus)
+      window.removeEventListener('offline', updateStatus)
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function initWebllm() {
+      if (typeof window === 'undefined') return
+      if (!('gpu' in navigator)) return
+
+      try {
+        const engineModule = await import('@mlc-ai/web-llm')
+        const { CreateMLCEngine } = engineModule
+
+        if (cancelled) return
+
+        const engine = await CreateMLCEngine('Llama-3.1-8B-Instruct-q4f32_1-MLC', {
+          initProgressCallback: () => undefined,
+        })
+
+        if (!cancelled) {
+          setWebllmStatus('ready')
+          ;(engine as { setLogLevel?: (level: string) => void })?.setLogLevel?.('INFO')
+        }
+      } catch {
+        if (!cancelled) setWebllmStatus('fallback')
+      }
+    }
+
+    initWebllm()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+  }, [messages, open])
+
+  const statusText = useMemo(() => {
+    if (webllmStatus === 'ready') return 'Local AI ready'
+    if (webllmStatus === 'fallback') return 'Offline guidance ready'
+    return isOffline ? 'Offline mode' : 'Online mode'
+  }, [isOffline, webllmStatus])
+
+  async function handleSend() {
+    const trimmed = input.trim()
+    if (!trimmed) return
+
+    const userMessage: ChatMessage = { id: Date.now(), role: 'user', text: trimmed }
+    setMessages((current) => [...current, userMessage])
+    setInput('')
+    setIsLoading(true)
+
+    try {
+      let response = buildReply(trimmed)
+
+      if (webllmStatus === 'ready' && typeof window !== 'undefined') {
+        try {
+          const engineModule = await import('@mlc-ai/web-llm')
+          const { CreateMLCEngine } = engineModule
+          const engine = await CreateMLCEngine('Llama-3.1-8B-Instruct-q4f32_1-MLC')
+          const result = await engine.chat.completions.create({
+            messages: [
+              { role: 'user', content: `You are STREE, an offline civic AI assistant for Indian local governance. Keep answers concise, practical, and civic-focused. User input: ${trimmed}` },
+            ],
+            temperature: 0.5,
+            max_tokens: 180,
+          })
+          response = result.choices?.[0]?.message?.content || response
+        } catch {
+          response = buildReply(trimmed)
+        }
+      }
+
+      setMessages((current) => [
+        ...current,
+        { id: Date.now() + 1, role: 'assistant', text: response },
+      ])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+      {open && (
+        <div className="w-[min(88vw,360px)] overflow-hidden rounded-2xl border border-border bg-white shadow-2xl ring-1 ring-black/5">
+          <div className="flex items-center justify-between bg-chai px-4 py-3 text-cream">
+            <div className="flex items-center gap-3">
+              <img src="/stree-avatar.svg" alt="STREE avatar" className="h-10 w-10 rounded-full border-2 border-white/60 object-cover" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-black tracking-[0.2em]">STREE</p>
+                  <Sparkles className="h-3.5 w-3.5" />
+                </div>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-cream/70">{statusText}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="rounded-md p-1 text-cream/80 hover:bg-white/10"
+              aria-label="Close STREE"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div ref={scrollRef} className="h-[340px] space-y-3 overflow-y-auto bg-[#fffaf3] p-3">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+                    message.role === 'user'
+                      ? 'bg-chai text-cream'
+                      : 'bg-[#f5efe7] text-charcoal'
+                  }`}
+                >
+                  {message.text}
+                </div>
+              </div>
+            ))}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="rounded-2xl bg-[#f5efe7] px-3 py-2 text-sm text-charcoal/75">
+                  STREE is thinking…
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-border bg-white p-3">
+            <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-charcoal/50">
+              <span className="inline-flex items-center gap-1.5">
+                {isOffline ? <WifiOff className="h-3 w-3" /> : <Wifi className="h-3 w-3" />}
+                {isOffline ? 'Offline' : 'Connected'}
+              </span>
+              <span>{webllmStatus === 'ready' ? 'WebLLM ready' : 'Local fallback'}</span>
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') handleSend()
+                }}
+                placeholder="Ask STREE about a civic issue..."
+                className="flex-1 rounded-xl border border-border bg-[#f8f4ee] px-3 py-2 text-sm text-charcoal outline-none placeholder:text-charcoal/40 focus:border-chai"
+              />
+              <button
+                type="button"
+                onClick={handleSend}
+                className="inline-flex items-center justify-center rounded-xl bg-chai px-3 py-2 text-cream transition-opacity hover:opacity-90 disabled:opacity-70"
+                disabled={isLoading || !input.trim()}
+                aria-label="Send message to STREE"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-3 rounded-full bg-chai px-4 py-3 text-sm font-bold tracking-[0.18em] text-cream shadow-2xl"
+        >
+          <MessageSquareText className="h-4 w-4" />
+          STREE
+        </button>
+      )}
+    </div>
+  )
+}
