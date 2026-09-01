@@ -1,4 +1,5 @@
--- CivicChai database schema
+-- CivicChai master schema
+-- Import this single file in Supabase SQL editor.
 
 create extension if not exists pgcrypto;
 
@@ -87,12 +88,36 @@ create table if not exists public.audit_logs (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.officer_registry (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  role text not null,
+  department text not null,
+  pin text not null,
+  hub text not null,
+  contact text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.official_documents (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  authority text not null,
+  document_number text,
+  source_url text,
+  published_at timestamptz not null default now(),
+  version text default '1.0',
+  checksum text,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_issues_status_priority on public.issues(status, priority);
 create index if not exists idx_issues_pin_locality on public.issues(pin, locality);
 create index if not exists idx_issues_created_at on public.issues(created_at desc);
 create index if not exists idx_issue_comments_issue_id on public.issue_comments(issue_id, created_at desc);
 create index if not exists idx_issue_supports_issue_id on public.issue_supports(issue_id);
 create index if not exists idx_audit_logs_issue_id on public.audit_logs(issue_id, created_at desc);
+create index if not exists idx_officer_registry_pin on public.officer_registry(pin, department);
 
 create or replace function public.handle_updated_at()
 returns trigger as $$
@@ -140,7 +165,6 @@ for each row execute function public.update_issue_counts();
 create trigger trg_issue_supports_count
 after insert or delete on public.issue_supports
 for each row execute function public.update_issue_counts();
--- Row Level Security setup for CivicChai
 
 alter table public.profiles enable row level security;
 alter table public.categories enable row level security;
@@ -149,80 +173,94 @@ alter table public.issues enable row level security;
 alter table public.issue_comments enable row level security;
 alter table public.issue_supports enable row level security;
 alter table public.audit_logs enable row level security;
+alter table public.officer_registry enable row level security;
+alter table public.official_documents enable row level security;
 
-create policy "profiles_are_viewable_by_authenticated_users"
+create policy "Profiles are viewable by owner or authenticated user"
 on public.profiles for select
-using (auth.uid() is not null);
+using (auth.uid() = id or auth.uid() is not null);
 
-create policy "profiles_can_update_own_record"
+create policy "Users can insert own profile"
+on public.profiles for insert
+with check (auth.uid() = id);
+
+create policy "Users can update own profile"
 on public.profiles for update
 using (auth.uid() = id)
 with check (auth.uid() = id);
 
-create policy "profiles_can_insert_own_record"
-on public.profiles for insert
-with check (auth.uid() = id);
-
-create policy "public_categories_are_readable"
+create policy "Public categories are readable"
 on public.categories for select
 using (true);
 
-create policy "public_departments_are_readable"
+create policy "Public departments are readable"
 on public.departments for select
 using (true);
 
-create policy "issues_are_viewable_by_authenticated_users"
+create policy "Issues are viewable by anyone"
 on public.issues for select
-using (auth.uid() is not null);
+using (true);
 
-create policy "issues_can_be_inserted_by_authenticated_users"
+create policy "Authenticated users can insert issues"
 on public.issues for insert
-with check (auth.uid() is not null);
+with check (auth.role() = 'authenticated');
 
-create policy "issues_can_be_updated_by_owners_or_admins"
+create policy "Authenticated users can update issues"
 on public.issues for update
-using (
-  auth.uid() = created_by
-  or auth.jwt() ->> 'role' = 'service_role'
-)
-with check (
-  auth.uid() = created_by
-  or auth.jwt() ->> 'role' = 'service_role'
-);
+using (auth.role() = 'authenticated')
+with check (auth.role() = 'authenticated');
 
-create policy "comments_are_viewable_by_authenticated_users"
+create policy "Issue comments are viewable by anyone"
 on public.issue_comments for select
-using (auth.uid() is not null);
+using (true);
 
-create policy "comments_can_be_inserted_by_authenticated_users"
+create policy "Authenticated users can create comments"
 on public.issue_comments for insert
-with check (auth.uid() is not null);
+with check (auth.role() = 'authenticated');
 
-create policy "comments_can_be_updated_by_owner"
+create policy "Users can update own comments"
 on public.issue_comments for update
 using (auth.uid() = author_id)
 with check (auth.uid() = author_id);
 
-create policy "supports_are_viewable_by_authenticated_users"
+create policy "Issue supports are viewable by anyone"
 on public.issue_supports for select
-using (auth.uid() is not null);
+using (true);
 
-create policy "supports_can_be_managed_by_authenticated_users"
+create policy "Authenticated users can manage supports"
 on public.issue_supports for insert
-with check (auth.uid() is not null);
+with check (auth.role() = 'authenticated');
 
-create policy "supports_can_be_deleted_by_owner"
+create policy "Users can delete own support"
 on public.issue_supports for delete
 using (auth.uid() = user_id);
 
-create policy "audit_logs_are_viewable_by_authenticated_users"
+create policy "Audit logs are readable for authenticated users"
 on public.audit_logs for select
-using (auth.uid() is not null);
+using (auth.role() = 'authenticated');
 
-create policy "audit_logs_can_be_inserted_by_service_role_only"
+create policy "Service role can insert audit logs"
 on public.audit_logs for insert
 with check (auth.jwt() ->> 'role' = 'service_role');
--- Seed reference data for categories and departments.
+
+create policy "Officer registry is readable by all"
+on public.officer_registry for select
+using (true);
+
+create policy "Authenticated users can manage registry"
+on public.officer_registry for all
+using (auth.role() = 'authenticated')
+with check (auth.role() = 'authenticated');
+
+create policy "Official documents are readable by all"
+on public.official_documents for select
+using (true);
+
+create policy "Authenticated users can manage official documents"
+on public.official_documents for all
+using (auth.role() = 'authenticated')
+with check (auth.role() = 'authenticated');
+
 insert into public.categories (name)
 values
   ('Roads & Potholes'),
@@ -230,7 +268,10 @@ values
   ('Sanitation'),
   ('Water Supply'),
   ('Drainage'),
-  ('Traffic')
+  ('Traffic'),
+  ('Streetlight'),
+  ('Waste Management'),
+  ('Public Health')
 on conflict (name) do nothing;
 
 insert into public.departments (slug, name)
@@ -240,5 +281,21 @@ values
   ('solid-waste', 'Solid Waste Management'),
   ('water-works', 'Water Works Department'),
   ('drainage', 'Drainage & Sewerage'),
-  ('traffic', 'Traffic Police / PWD')
+  ('traffic', 'Traffic Police / PWD'),
+  ('public-lighting', 'Municipal Public Lighting'),
+  ('water-supply', 'Water Supply Department'),
+  ('health', 'Public Health Office')
 on conflict (slug) do nothing;
+
+insert into public.officer_registry (name, role, department, pin, hub, contact)
+values
+  ('R. Kulkarni', 'Ward Officer', 'Municipal Public Lighting', '401208', 'Station Road Hub', '+91 98765 43210'),
+  ('S. Mehta', 'Sanitary Inspector', 'Solid Waste Management', '401209', 'Market Square Hub', '+91 98765 43211'),
+  ('P. Joshi', 'Junior Engineer', 'Roads & Infrastructure', '401208', 'School Boundary Hub', '+91 98765 43212')
+on conflict do nothing;
+
+insert into public.official_documents (title, authority, document_number, source_url, published_at, version)
+values
+  ('Streetlight maintenance SOP', 'Municipal Works Department', 'MWD-2026-14', 'https://example.gov.in/docs/streetlight-sop', now(), 'v1.0'),
+  ('Solid waste complaint escalation policy', 'Civic Services Office', 'CSO-2026-07', 'https://example.gov.in/docs/waste-policy', now(), 'v1.0')
+on conflict do nothing;

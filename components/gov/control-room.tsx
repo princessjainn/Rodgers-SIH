@@ -9,6 +9,8 @@ import {
   ComplaintsView,
   GISView,
   AnalyticsView,
+  RegistryView,
+  AuditView,
 } from '@/components/gov/control-room-views'
 import {
   LayoutDashboard,
@@ -20,13 +22,15 @@ import {
   ArrowLeft,
 } from 'lucide-react'
 
-type Tab = 'overview' | 'complaints' | 'gis' | 'analytics'
+type Tab = 'overview' | 'complaints' | 'gis' | 'analytics' | 'registry' | 'audit'
 
 const NAV: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'complaints', label: 'Complaints', icon: ListChecks },
   { id: 'gis', label: 'Chai Heat Map', icon: Map },
   { id: 'analytics', label: 'Analytics', icon: ChartColumn },
+  { id: 'registry', label: 'Registry', icon: ShieldCheck },
+  { id: 'audit', label: 'Audit', icon: Bell },
 ]
 
 const TITLES: Record<Tab, { title: string; sub: string }> = {
@@ -34,6 +38,8 @@ const TITLES: Record<Tab, { title: string; sub: string }> = {
   complaints: { title: 'Complaints', sub: 'Normalized, prioritized, de-duplicated' },
   gis: { title: 'Chai Heat Map', sub: 'Privacy-preserving geographic hotspots' },
   analytics: { title: 'Analytics', sub: 'Resolution performance & SLA trends' },
+  registry: { title: 'Officer Registry', sub: 'Authority, hub and contact routing' },
+  audit: { title: 'Audit & Compliance', sub: 'Status history, access logs and governance trail' },
 }
 
 export function ControlRoom() {
@@ -145,6 +151,8 @@ export function ControlRoom() {
           {tab === 'complaints' && <ComplaintsView />}
           {tab === 'gis' && <GISView />}
           {tab === 'analytics' && <AnalyticsView />}
+          {tab === 'registry' && <RegistryView />}
+          {tab === 'audit' && <AuditView />}
         </main>
       </div>
     </div>

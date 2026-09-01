@@ -447,3 +447,74 @@ export function AnalyticsView() {
     </div>
   )
 }
+
+export function RegistryView() {
+  const officers = [
+    { name: 'R. Kulkarni', role: 'Ward Officer', department: 'Public Lighting', pin: '401208', hub: 'Station Road Hub', contact: '+91 98765 43210' },
+    { name: 'S. Mehta', role: 'Sanitary Inspector', department: 'Solid Waste Management', pin: '401209', hub: 'Market Square Hub', contact: '+91 98765 43211' },
+    { name: 'P. Joshi', role: 'Junior Engineer', department: 'PWD — Roads Division', pin: '401208', hub: 'School Boundary Hub', contact: '+91 98765 43212' },
+  ]
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-sidebar-border bg-sidebar-accent p-5">
+        <h3 className="text-sm font-semibold text-cream">Officer / Hub registry</h3>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left text-sm text-cream/80">
+            <thead className="text-xs uppercase tracking-wide text-cream/50">
+              <tr>
+                <th className="px-3 py-2">Officer</th>
+                <th className="px-3 py-2">Role</th>
+                <th className="px-3 py-2">Department</th>
+                <th className="px-3 py-2">PIN</th>
+                <th className="px-3 py-2">Hub</th>
+                <th className="px-3 py-2">Contact</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-sidebar-border">
+              {officers.map((officer) => (
+                <tr key={officer.name} className="text-cream/75">
+                  <td className="px-3 py-2 font-medium text-cream">{officer.name}</td>
+                  <td className="px-3 py-2">{officer.role}</td>
+                  <td className="px-3 py-2">{officer.department}</td>
+                  <td className="px-3 py-2">{officer.pin}</td>
+                  <td className="px-3 py-2">{officer.hub}</td>
+                  <td className="px-3 py-2">{officer.contact}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function AuditView() {
+  const events = [
+    { time: '01 Sep 2026, 14:10', actor: 'Citizen', action: 'Complaint filed', detail: 'Streetlights not working near Station Road' },
+    { time: '01 Sep 2026, 14:22', actor: 'AI Engine', action: 'Auto classified', detail: 'Public Lighting • High priority • Duplicate check suggested' },
+    { time: '01 Sep 2026, 15:10', actor: 'Ward Officer', action: 'Assigned to team', detail: 'Electric maintenance team route set' },
+    { time: '01 Sep 2026, 16:15', actor: 'Moderator', action: 'Duplicate reviewed', detail: 'Related issue confirmed, not auto-merged' },
+  ]
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-sidebar-border bg-sidebar-accent p-5">
+        <h3 className="text-sm font-semibold text-cream">Audit & compliance trail</h3>
+        <div className="mt-4 space-y-3">
+          {events.map((event) => (
+            <div key={`${event.time}-${event.action}`} className="rounded-md border border-sidebar-border bg-sidebar p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-cream">{event.action}</p>
+                <span className="text-[10px] uppercase tracking-wide text-cream/50">{event.time}</span>
+              </div>
+              <p className="mt-1 text-xs text-cream/60">Actor: {event.actor}</p>
+              <p className="mt-2 text-sm text-cream/75">{event.detail}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
