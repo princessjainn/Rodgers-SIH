@@ -42,23 +42,12 @@ export function LocalChaiView() {
   }, [])
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-border bg-chai p-4 text-cream">
-        <p className="text-xs uppercase tracking-widest text-cream/60">Your Chai</p>
-        <div className="mt-1 flex items-center justify-between">
-          <div>
-            <p className="font-display text-2xl font-extrabold">PIN {LOCALITY.pin}</p>
-            <p className="flex items-center gap-1 text-sm text-cream/75">
-              <MapPin className="h-3.5 w-3.5" />
-              {LOCALITY.name}
-            </p>
-          </div>
-          <ChaiHeatMeter heat={82} size="md" showLabel={false} className="text-cream" />
-        </div>
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {issues.map((issue) => (
+          <ChaiCard key={issue.id} issue={issue} />
+        ))}
       </div>
-      {issues.map((issue) => (
-        <ChaiCard key={issue.id} issue={issue} />
-      ))}
     </div>
   )
 }
@@ -91,15 +80,7 @@ export function ChaiTapriView() {
 
   const ranked = [...issues].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0))
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="font-display text-2xl font-extrabold text-charcoal">
-          Chai Tapri
-        </h1>
-        <p className="text-sm text-charcoal/60">
-          Dekho kis mudde ki chai sabse garam hai.
-        </p>
-      </div>
+    <div className="space-y-5">
       <div className="flex gap-2 overflow-x-auto pb-1">
         {TABS.map((t) => (
           <button
@@ -120,23 +101,33 @@ export function ChaiTapriView() {
         {ranked.map((issue, i) => (
           <li
             key={issue.id}
-            className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4"
+            className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm md:flex-row md:items-center"
           >
-            <span className="font-display text-xl font-extrabold text-charcoal/25">
-              {i + 1}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-display font-bold text-charcoal">
-                {issue.title}
-              </p>
-              <div className="mt-1 flex items-center gap-2">
-                <PriorityBadge priority={issue.priority} />
-                <span className="truncate text-xs text-charcoal/55">
-                  {issue.reports} reports
-                </span>
-              </div>
+            <div className="flex min-w-[56px] items-center justify-center">
+              <span className="font-display text-3xl font-extrabold text-charcoal/20">
+                {i + 1}
+              </span>
             </div>
-            <ChaiHeatMeter heat={issue.chaiHeat ?? 0} size="sm" showLabel={false} />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="truncate font-display text-xl font-bold text-charcoal">
+                  {issue.title}
+                </p>
+                <PriorityBadge priority={issue.priority} />
+              </div>
+              <p className="mt-1 text-sm text-charcoal/60">
+                {issue.department} · PIN {issue.pin} · {issue.locality}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 md:justify-end">
+              <div className="text-right">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal/45">
+                  Heat
+                </p>
+                <p className="font-display text-xl font-extrabold text-heat">{issue.chaiHeat}</p>
+              </div>
+              <ChaiHeatMeter heat={issue.chaiHeat ?? 0} size="sm" showLabel={false} />
+            </div>
           </li>
         ))}
       </ol>
@@ -173,10 +164,7 @@ export function MyCharchaView() {
   }, [])
 
   return (
-    <div className="space-y-4">
-      <h1 className="font-display text-2xl font-extrabold text-charcoal">
-        My Charcha
-      </h1>
+    <div className="space-y-5">
       <div className="flex gap-2 overflow-x-auto pb-1">
         {MY_TABS.map((t) => (
           <button
@@ -194,35 +182,42 @@ export function MyCharchaView() {
         ))}
       </div>
 
-      <div className="space-y-2">
-        {issues.slice(0, 3).map((issue) => (
-          <button
-            key={issue.id}
-            onClick={() => setActive(issue)}
-            className={cn(
-              'flex w-full items-center gap-3 rounded-2xl border bg-card p-4 text-left transition-colors',
-              active.id === issue.id ? 'border-chai' : 'border-border',
-            )}
-          >
-            <div className="min-w-0 flex-1">
-              <p className="font-mono text-xs text-charcoal/50">{issue.id}</p>
-              <p className="truncate font-display font-bold text-charcoal">
-                {issue.title}
-              </p>
-              <div className="mt-1">
-                <StatusBadge status={issue.status} />
+      <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
+        <div className="space-y-2">
+          {issues.slice(0, 3).map((issue) => (
+            <button
+              key={issue.id}
+              onClick={() => setActive(issue)}
+              className={cn(
+                'flex w-full items-center gap-3 rounded-2xl border bg-card p-4 text-left transition-colors',
+                active.id === issue.id ? 'border-chai shadow-sm' : 'border-border',
+              )}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="font-mono text-xs text-charcoal/50">{issue.id}</p>
+                <p className="truncate font-display font-bold text-charcoal">
+                  {issue.title}
+                </p>
+                <div className="mt-1">
+                  <StatusBadge status={issue.status} />
+                </div>
               </div>
-            </div>
-            <ChevronRight className="h-4 w-4 shrink-0 text-charcoal/40" />
-          </button>
-        ))}
-      </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-charcoal/40" />
+            </button>
+          ))}
+        </div>
 
-      <div className="rounded-2xl border border-border bg-card p-5">
-        <p className="font-mono text-xs text-charcoal/50">{active.id}</p>
-        <p className="font-display font-bold text-charcoal">{active.title}</p>
-        <div className="mt-4">
-          <CivicTimeline status={active.status} />
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <p className="font-mono text-xs text-charcoal/50">{active.id}</p>
+          <p className="mt-1 font-display text-xl font-bold text-charcoal">{active.title}</p>
+          <p className="mt-2 text-sm leading-relaxed text-charcoal/70">{active.description}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <StatusBadge status={active.status} />
+            <PriorityBadge priority={active.priority} />
+          </div>
+          <div className="mt-6">
+            <CivicTimeline status={active.status} />
+          </div>
         </div>
       </div>
     </div>
@@ -239,34 +234,34 @@ export function ProfileView() {
     [HelpCircle, 'Help & support'],
   ] as const
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
-        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-terracotta/15 font-display text-xl font-extrabold text-terracotta">
+    <div className="space-y-5">
+      <div className="flex items-center gap-5 rounded-2xl border border-border bg-card p-6">
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-terracotta/15 font-display text-2xl font-extrabold text-terracotta">
           RK
         </span>
         <div>
-          <p className="font-display text-lg font-extrabold text-charcoal">
+          <p className="font-display text-xl font-extrabold text-charcoal">
             Riya K.
           </p>
-          <p className="flex items-center gap-1 text-sm text-charcoal/60">
+          <p className="mt-0.5 flex items-center gap-1.5 text-sm text-charcoal/60">
             <MapPin className="h-3.5 w-3.5" /> {LOCALITY.name}
           </p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-chai p-5 text-cream">
+      <div className="rounded-2xl border border-border bg-chai p-6 text-cream">
         <p className="text-xs uppercase tracking-widest text-cream/60">
           Your Civic Impact
         </p>
-        <div className="mt-3 grid grid-cols-3 gap-3 text-center">
+        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
           {[
             ['12', 'Reports filed'],
             ['48', 'Issues supported'],
             ['7', 'Issues resolved'],
           ].map(([v, k]) => (
-            <div key={k}>
-              <p className="font-display text-2xl font-extrabold text-gold">{v}</p>
-              <p className="text-xs text-cream/70">{k}</p>
+            <div key={k} className="rounded-xl bg-cream/10 p-3">
+              <p className="font-display text-3xl font-extrabold text-gold">{v}</p>
+              <p className="mt-1 text-xs text-cream/70">{k}</p>
             </div>
           ))}
         </div>
@@ -277,7 +272,7 @@ export function ProfileView() {
           <button
             key={label}
             className={cn(
-              'flex w-full items-center gap-3 px-5 py-3.5 text-left text-sm font-medium text-charcoal hover:bg-muted',
+              'flex w-full items-center gap-3 px-6 py-4 text-left text-sm font-medium text-charcoal hover:bg-muted transition-colors',
               i !== rows.length - 1 && 'border-b border-border',
             )}
           >

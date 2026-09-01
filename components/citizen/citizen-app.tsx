@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { Logo } from '@/components/brand/logo'
+import { SiteNav } from '@/components/landing/site-nav'
+import { SiteFooter } from '@/components/landing/site-footer'
 import { Composer } from './composer'
 import {
   LocalChaiView,
@@ -11,7 +12,10 @@ import {
   MyCharchaView,
   ProfileView,
 } from './views'
-import { Home, Flame, ScrollText, User, Plus, WifiOff } from 'lucide-react'
+import { Home, Flame, ScrollText, User, Plus, WifiOff, ArrowRight } from 'lucide-react'
+import { LOCALITY } from '@/lib/demo-data'
+import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
+import { MapPin } from 'lucide-react'
 
 type Tab = 'home' | 'tapri' | 'charcha' | 'profile'
 
@@ -27,92 +31,194 @@ export function CitizenApp() {
   const [composerOpen, setComposerOpen] = useState(false)
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-background paper-grain">
-      {/* top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/90 px-4 py-3 backdrop-blur">
-        <Link href="/" aria-label="CivicChai home">
-          <Logo />
-        </Link>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-leaf/40 bg-leaf/10 px-2.5 py-1 text-xs font-medium text-leaf">
-          <WifiOff className="h-3 w-3" />
-          Offline ready
-        </span>
-      </header>
+    <main className="min-h-dvh bg-background text-charcoal">
+      <SiteNav />
 
-      {/* views */}
-      <main className="flex-1 px-4 pb-28 pt-4">
-        {tab === 'home' && <LocalChaiView />}
-        {tab === 'tapri' && <ChaiTapriView />}
-        {tab === 'charcha' && <MyCharchaView />}
-        {tab === 'profile' && <ProfileView />}
-      </main>
+      {/* Hero banner */}
+      <section className="paper-grain border-b border-border">
+        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-leaf/40 bg-leaf/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-leaf">
+                <WifiOff className="h-3 w-3" />
+                Offline ready
+              </span>
+              <h1 className="mt-5 font-display text-4xl font-extrabold tracking-tight text-charcoal sm:text-5xl lg:text-6xl">
+                Your Local Chai
+              </h1>
+              <p className="mt-5 max-w-xl text-lg leading-relaxed text-charcoal/75">
+                Your locality civic feed. Report, discuss and support issues in your neighbourhood.
+                Every charcha starts with a cup of chai.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <button
+                  onClick={() => setComposerOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-terracotta px-5 py-3 text-sm font-semibold text-cream shadow-sm transition-transform hover:-translate-y-0.5"
+                >
+                  <Plus className="h-4 w-4" />
+                  Pour a Chai — Start your Charcha
+                </button>
+                <Link
+                  href="/chai-tapri"
+                  className="inline-flex items-center gap-2 rounded-xl border border-chai/30 bg-cream px-5 py-3 text-sm font-semibold text-chai transition-colors hover:bg-chai/5"
+                >
+                  View Chai Tapri
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
 
-      {/* bottom navigation */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-md border-t border-border bg-card/95 px-2 backdrop-blur">
-        <div className="relative flex items-center justify-between px-2 py-2">
-          {NAV.slice(0, 2).map((n) => (
-            <NavButton
-              key={n.key}
-              label={n.label}
-              icon={n.icon}
-              active={tab === n.key}
-              onClick={() => setTab(n.key)}
-            />
-          ))}
-
-          {/* center Pour a Chai */}
-          <div className="flex w-16 shrink-0 flex-col items-center">
-            <button
-              onClick={() => setComposerOpen(true)}
-              aria-label="Pour a Chai — start your Charcha"
-              className="-mt-8 flex h-16 w-16 items-center justify-center rounded-full border-4 border-background bg-terracotta text-cream shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95"
-            >
-              <Plus className="h-7 w-7" />
-            </button>
-            <span className="mt-0.5 text-[10px] font-semibold text-terracotta">
-              Pour a Chai
-            </span>
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-lg">
+              <div className="rounded-2xl border border-border bg-chai p-5 text-cream">
+                <p className="text-xs uppercase tracking-widest text-cream/60">Your Chai</p>
+                <div className="mt-2 flex items-center justify-between">
+                  <div>
+                    <p className="font-display text-3xl font-extrabold">PIN {LOCALITY.pin}</p>
+                    <p className="mt-1 flex items-center gap-1.5 text-sm text-cream/75">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {LOCALITY.name}
+                    </p>
+                  </div>
+                  <ChaiHeatMeter heat={82} size="md" showLabel={false} className="text-cream" />
+                </div>
+              </div>
+              <p className="mt-4 text-sm leading-relaxed text-charcoal/65">
+                Issues in your area are ranked by urgency, frequency and community support.
+                The hotter the chai, the more attention it gets.
+              </p>
+            </div>
           </div>
-
-          {NAV.slice(2).map((n) => (
-            <NavButton
-              key={n.key}
-              label={n.label}
-              icon={n.icon}
-              active={tab === n.key}
-              onClick={() => setTab(n.key)}
-            />
-          ))}
         </div>
-      </nav>
+      </section>
+
+      {/* Desktop tab navigation */}
+      <section className="sticky top-16 z-40 border-b border-border bg-cream/90 backdrop-blur-md">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="flex items-center gap-1 overflow-x-auto py-2">
+            {NAV.map((n) => {
+              const Icon = n.icon
+              return (
+                <button
+                  key={n.key}
+                  onClick={() => setTab(n.key)}
+                  aria-current={tab === n.key ? 'page' : undefined}
+                  className={cn(
+                    'inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap',
+                    tab === n.key
+                      ? 'bg-chai text-cream shadow-sm'
+                      : 'text-charcoal/60 hover:bg-chai/10 hover:text-chai',
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {n.label}
+                </button>
+              )
+            })}
+
+            <div className="ml-auto">
+              <button
+                onClick={() => setComposerOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-terracotta px-4 py-2.5 text-sm font-semibold text-cream shadow-sm transition-transform hover:-translate-y-0.5"
+              >
+                <Plus className="h-4 w-4" />
+                Pour a Chai
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Tab content */}
+      <section className="py-10 sm:py-14">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          {tab === 'home' && <LocalChaiDesktopView />}
+          {tab === 'tapri' && <ChaiTapriDesktopView />}
+          {tab === 'charcha' && <MyCharchaDesktopView />}
+          {tab === 'profile' && <ProfileDesktopView />}
+        </div>
+      </section>
+
+      <SiteFooter />
 
       {composerOpen && <Composer onClose={() => setComposerOpen(false)} />}
+    </main>
+  )
+}
+
+/* ---- Desktop wrapper views that use existing view components in full-width layouts ---- */
+
+function LocalChaiDesktopView() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
+          Feed
+        </span>
+        <h2 className="mt-2 font-display text-2xl font-bold text-charcoal sm:text-3xl">
+          Issues in your locality
+        </h2>
+        <p className="mt-1 text-sm text-charcoal/60">
+          Browse, support and discuss civic issues around PIN {LOCALITY.pin}
+        </p>
+      </div>
+      <LocalChaiView />
     </div>
   )
 }
 
-function NavButton({
-  label,
-  icon: Icon,
-  active,
-  onClick,
-}: {
-  label: string
-  icon: React.ElementType
-  active: boolean
-  onClick: () => void
-}) {
+function ChaiTapriDesktopView() {
   return (
-    <button
-      onClick={onClick}
-      aria-current={active ? 'page' : undefined}
-      className={cn(
-        'flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[10px] font-medium transition-colors',
-        active ? 'text-chai' : 'text-charcoal/50',
-      )}
-    >
-      <Icon className={cn('h-5 w-5', active && 'text-chai')} />
-      {label}
-    </button>
+    <div className="space-y-6">
+      <div>
+        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-heat">
+          Trending
+        </span>
+        <h2 className="mt-2 font-display text-2xl font-bold text-charcoal sm:text-3xl">
+          Chai Tapri — Hottest issues
+        </h2>
+        <p className="mt-1 text-sm text-charcoal/60">
+          Dekho kis mudde ki chai sabse garam hai.
+        </p>
+      </div>
+      <ChaiTapriView />
+    </div>
+  )
+}
+
+function MyCharchaDesktopView() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-chai">
+          Your Discussions
+        </span>
+        <h2 className="mt-2 font-display text-2xl font-bold text-charcoal sm:text-3xl">
+          My Charcha
+        </h2>
+        <p className="mt-1 text-sm text-charcoal/60">
+          Track issues you've filed, are watching or have supported.
+        </p>
+      </div>
+      <MyCharchaView />
+    </div>
+  )
+}
+
+function ProfileDesktopView() {
+  return (
+    <div className="mx-auto max-w-2xl space-y-6">
+      <div>
+        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
+          Account
+        </span>
+        <h2 className="mt-2 font-display text-2xl font-bold text-charcoal sm:text-3xl">
+          Your Profile
+        </h2>
+        <p className="mt-1 text-sm text-charcoal/60">
+          Manage your account, preferences and civic impact.
+        </p>
+      </div>
+      <ProfileView />
+    </div>
   )
 }
