@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Flame, Users, FileText, Clock, ArrowRight } from 'lucide-react'
-import { heatLabel } from '@/lib/demo-data'
+import { heatLabel } from '@/lib/issue-helpers'
 
 export function Hero() {
   const [heat, setHeat] = useState(72)

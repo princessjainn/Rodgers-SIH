@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Manrope, Noto_Sans_Devanagari } from 'next/font/google'
 import { PwaRegister } from '@/components/pwa-register'
 import { StreeChat } from '@/components/stree-chat'
+import { LanguageProvider } from '@/components/language-provider'
 import './globals.css'
 
 const inter = Inter({
@@ -56,10 +57,12 @@ export default function RootLayout({
       className={`${inter.variable} ${manrope.variable} ${notoDeva.variable} bg-background`}
     >
       <body className="antialiased">
-        <PwaRegister />
-        {children}
-        <StreeChat />
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <LanguageProvider>
+          <PwaRegister />
+          {children}
+          <StreeChat />
+          {process.env.NODE_ENV === 'production' && <Analytics />}
+        </LanguageProvider>
       </body>
     </html>
   )

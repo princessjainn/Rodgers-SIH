@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { heatLabel } from '@/lib/demo-data'
+import { heatLabel } from '@/lib/issue-helpers'
 
 interface ChaiHeatMeterProps {
   heat: number

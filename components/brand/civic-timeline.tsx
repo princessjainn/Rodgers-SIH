@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import type { IssueStatus } from '@/lib/types'
-import { TIMELINE_STEPS } from '@/lib/demo-data'
+import { TIMELINE_STEPS } from '@/lib/issue-helpers'
 import { Check } from 'lucide-react'
 
 const ORDER: IssueStatus[] = TIMELINE_STEPS.map((s) => s.key)
