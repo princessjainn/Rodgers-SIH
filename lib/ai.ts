@@ -226,7 +226,7 @@ export async function analyzeComplaintWithGroq(
       : fallback.duplicateIssue
 
     return {
-      language: String(parsed.language ?? detectedLanguage === 'Auto Detect' ? 'Hinglish' : detectedLanguage),
+      language: String(parsed.language ?? (detectedLanguage === 'Auto Detect' ? 'Hinglish' : detectedLanguage)),
       category: String(parsed.category ?? fallback.category),
       issue: String(parsed.issue ?? fallback.issue),
       location: String(parsed.location ?? fallback.location),

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { analyzeComplaintRequest } from '@/lib/ai'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
+import type { IssueRecord } from '@/lib/types'
 import {
   X,
   Mic,
@@ -26,6 +27,7 @@ export function Composer({ onClose }: { onClose: () => void }) {
   const [lang, setLang] = useState('Auto Detect')
   const [analysis, setAnalysis] = useState<Awaited<ReturnType<typeof analyzeComplaintRequest>> | null>(null)
   const [isListening, setIsListening] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const recognitionRef = useRef<any>(null)
 
   const documentId = useMemo(
@@ -40,28 +42,37 @@ export function Composer({ onClose }: { onClose: () => void }) {
     if (!SpeechRecognition) return
 
     const recognition = new SpeechRecognition()
-    recognition.lang = lang === 'Auto Detect' ? 'en-IN' : 'en-IN'
+    recognition.lang = 'en-IN'
     recognition.interimResults = true
     recognition.continuous = false
 
     recognition.onresult = (event: any) => {
-      const transcript = Array.from(event.results)
-        .map((result: any) => result[0]?.transcript ?? '')
-        .join(' ')
-        .trim()
+      let transcript = ''
+      for (let i = 0; i < event.results.length; i += 1) {
+        transcript += event.results[i][0]?.transcript ?? ''
+      }
 
-      if (transcript) {
-        setText((current) => (current ? `${current} ${transcript}` : transcript))
+      const cleaned = transcript.trim()
+      if (cleaned) {
+        setText((current) => {
+          if (!current) return cleaned
+          return current.trim().endsWith(cleaned) ? current : `${current.trim()} ${cleaned}`.trim()
+        })
       }
     }
 
     recognition.onend = () => setIsListening(false)
     recognition.onerror = () => setIsListening(false)
+    recognition.onstart = () => setIsListening(true)
 
     recognitionRef.current = recognition
 
     return () => {
-      recognition.stop()
+      try {
+        recognition.stop()
+      } catch {
+        // no-op
+      }
     }
   }, [lang])
 
@@ -74,6 +85,8 @@ export function Composer({ onClose }: { onClose: () => void }) {
   }
 
   function toggleVoice() {
+    if (typeof window === 'undefined') return
+
     const SpeechRecognition = (window as any).SpeechRecognition ?? (window as any).webkitSpeechRecognition
     if (!SpeechRecognition || !recognitionRef.current) {
       setText((current) => current || 'Voice input is not supported in this browser. Please type your complaint.')
@@ -86,8 +99,52 @@ export function Composer({ onClose }: { onClose: () => void }) {
       return
     }
 
-    recognitionRef.current.start()
-    setIsListening(true)
+    try {
+      recognitionRef.current.start()
+      setIsListening(true)
+    } catch {
+      setIsListening(false)
+    }
+  }
+
+  async function submitReport() {
+    if (!analysis) return
+
+    setIsSubmitting(true)
+    try {
+      const payload = {
+        title: analysis.issue,
+        description: text.trim(),
+        category: analysis.category,
+        department: analysis.department,
+        pin: analysis.location.match(/\d{6}/)?.[0] ?? '401208',
+        locality: analysis.location.replace(/PIN\s*\d{6}\s*·\s*/i, '').trim() || 'Market Square',
+        status: 'Filed' as const,
+        priority: analysis.priority,
+        officer: 'Unassigned',
+        hub: 'Ward Operations Hub',
+      }
+
+      const response = await fetch('/api/issues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({ error: 'Failed to create report' }))
+        throw new Error(errorBody.error ?? 'Failed to create report')
+      }
+
+      const issue = (await response.json()) as IssueRecord
+      setStep('done')
+      setAnalysis((prev) => prev ? { ...prev, summary: `Report ${issue.documentId ?? issue.id} successfully filed for ${issue.department}.` } : prev)
+    } catch (error) {
+      console.error('Issue submission failed', error)
+      setStep('done')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -230,10 +287,11 @@ export function Composer({ onClose }: { onClose: () => void }) {
                 </div>
               </dl>
               <button
-                onClick={() => setStep('done')}
-                className="w-full rounded-xl bg-chai px-4 py-3 text-sm font-semibold text-cream"
+                onClick={submitReport}
+                disabled={isSubmitting}
+                className="w-full rounded-xl bg-chai px-4 py-3 text-sm font-semibold text-cream disabled:opacity-60"
               >
-                Create report
+                {isSubmitting ? 'Submitting...' : 'Create report'}
               </button>
             </div>
           )}

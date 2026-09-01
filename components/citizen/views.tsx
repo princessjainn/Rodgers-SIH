@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ISSUES, LOCALITY } from '@/lib/demo-data'
 import type { IssueRecord } from '@/lib/types'
@@ -20,6 +20,27 @@ import {
 
 /* ---------------- Local Chai (Home feed) ---------------- */
 export function LocalChaiView() {
+  const [issues, setIssues] = useState<IssueRecord[]>(ISSUES)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/issues')
+      .then((res) => res.ok ? res.json() : Promise.reject(new Error('Failed')))
+      .then((payload) => {
+        if (!cancelled && Array.isArray(payload?.issues)) {
+          setIssues(payload.issues)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIssues(ISSUES)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-chai p-4 text-cream">
@@ -35,7 +56,7 @@ export function LocalChaiView() {
           <ChaiHeatMeter heat={82} size="md" showLabel={false} className="text-cream" />
         </div>
       </div>
-      {ISSUES.map((issue) => (
+      {issues.map((issue) => (
         <ChaiCard key={issue.id} issue={issue} />
       ))}
     </div>
@@ -47,7 +68,28 @@ const TABS = ['Hottest', 'Rising', 'Nearby', 'Unresolved'] as const
 
 export function ChaiTapriView() {
   const [tab, setTab] = useState<(typeof TABS)[number]>('Hottest')
-  const ranked = [...ISSUES].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0))
+  const [issues, setIssues] = useState<IssueRecord[]>(ISSUES)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/issues')
+      .then((res) => res.ok ? res.json() : Promise.reject(new Error('Failed')))
+      .then((payload) => {
+        if (!cancelled && Array.isArray(payload?.issues)) {
+          setIssues(payload.issues)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIssues(ISSUES)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const ranked = [...issues].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0))
   return (
     <div className="space-y-4">
       <div>
@@ -107,7 +149,29 @@ const MY_TABS = ['Filed', 'Tracking', 'Upvoted', 'Resolved'] as const
 
 export function MyCharchaView() {
   const [tab, setTab] = useState<(typeof MY_TABS)[number]>('Tracking')
+  const [issues, setIssues] = useState<IssueRecord[]>(ISSUES)
   const [active, setActive] = useState<IssueRecord>(ISSUES[1] ?? ISSUES[0])
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/issues')
+      .then((res) => res.ok ? res.json() : Promise.reject(new Error('Failed')))
+      .then((payload) => {
+        if (!cancelled && Array.isArray(payload?.issues) && payload.issues.length > 0) {
+          setIssues(payload.issues)
+          setActive(payload.issues[1] ?? payload.issues[0])
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIssues(ISSUES)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
     <div className="space-y-4">
       <h1 className="font-display text-2xl font-extrabold text-charcoal">
@@ -131,7 +195,7 @@ export function MyCharchaView() {
       </div>
 
       <div className="space-y-2">
-        {ISSUES.slice(0, 3).map((issue) => (
+        {issues.slice(0, 3).map((issue) => (
           <button
             key={issue.id}
             onClick={() => setActive(issue)}

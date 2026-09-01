@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ISSUES } from '@/lib/demo-data'
 import type { IssueRecord } from '@/lib/types'
@@ -124,10 +124,32 @@ export function OverviewView() {
 export function ComplaintsView() {
   const [selected, setSelected] = useState<string | null>(null)
   const [query, setQuery] = useState('')
-  const rows = ISSUES.filter((i) =>
+  const [issues, setIssues] = useState<IssueRecord[]>(ISSUES)
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/issues')
+      .then((res) => res.ok ? res.json() : Promise.reject(new Error('Failed')))
+      .then((payload) => {
+        if (!cancelled && Array.isArray(payload?.issues)) {
+          setIssues(payload.issues)
+          if (payload.issues[0]) setSelected(payload.issues[0].id)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIssues(ISSUES)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const rows = issues.filter((i) =>
     i.title.toLowerCase().includes(query.toLowerCase()),
   )
-  const active = ISSUES.find((i) => i.id === selected)
+  const active = issues.find((i) => i.id === selected)
 
   return (
     <div className="space-y-4">
