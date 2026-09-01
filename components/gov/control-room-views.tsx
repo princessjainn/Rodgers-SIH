@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { cn } from '@/lib/utils'
 import type { IssueRecord } from '@/lib/types'
 import { PriorityBadge, StatusBadge, TrustBadge } from '@/components/brand/badges'
@@ -16,6 +17,26 @@ import {
   ShieldCheck,
   History,
 } from 'lucide-react'
+const MapContainer = dynamic(
+  async () => (await import('react-leaflet')).MapContainer,
+  { ssr: false },
+)
+const TileLayer = dynamic(
+  async () => (await import('react-leaflet')).TileLayer,
+  { ssr: false },
+)
+const Circle = dynamic(
+  async () => (await import('react-leaflet')).Circle,
+  { ssr: false },
+)
+const Popup = dynamic(
+  async () => (await import('react-leaflet')).Popup,
+  { ssr: false },
+)
+const useMap = dynamic(
+  async () => (await import('react-leaflet')).useMap,
+  { ssr: false },
+)
 
 /* ---------------- Overview ---------------- */
 const STATS = [
@@ -333,10 +354,9 @@ const HOTSPOTS = [
     tone: 'bg-heat',
     issues: 214,
     heat: 88,
-    x: 34,
-    y: 22,
     label: 'Station Road',
-    intensity: 0.9,
+    position: [18.5305, 73.8533] as [number, number],
+    intensity: 0.92,
   },
   {
     pin: '401209',
@@ -344,9 +364,8 @@ const HOTSPOTS = [
     tone: 'bg-terracotta',
     issues: 132,
     heat: 71,
-    x: 58,
-    y: 46,
     label: 'Market Square',
+    position: [18.5342, 73.8671] as [number, number],
     intensity: 0.74,
   },
   {
@@ -355,9 +374,8 @@ const HOTSPOTS = [
     tone: 'bg-gold',
     issues: 76,
     heat: 52,
-    x: 28,
-    y: 68,
     label: 'School Boundary',
+    position: [18.5213, 73.8442] as [number, number],
     intensity: 0.54,
   },
   {
@@ -366,113 +384,81 @@ const HOTSPOTS = [
     tone: 'bg-leaf',
     issues: 28,
     heat: 33,
-    x: 74,
-    y: 30,
     label: 'Riverside',
+    position: [18.5429, 73.8755] as [number, number],
     intensity: 0.35,
   },
 ]
+
+function MapFocus({ center }: { center: [number, number] }) {
+  const map = useMap()
+
+  useEffect(() => {
+    map.setView(center, 13)
+  }, [center, map])
+
+  return null
+}
 
 export function GISView() {
   const [active, setActive] = useState(HOTSPOTS[0])
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
-      <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-sidebar-border bg-[#26221d]">
-        <div className="absolute inset-0 opacity-30" aria-hidden>
-          <svg viewBox="0 0 800 520" className="h-full w-full">
-            <defs>
-              <linearGradient id="roadGlow" x1="0%" x2="100%" y1="0%" y2="0%">
-                <stop offset="0%" stopColor="rgba(255,255,255,0.10)" />
-                <stop offset="50%" stopColor="rgba(255,199,128,0.28)" />
-                <stop offset="100%" stopColor="rgba(255,255,255,0.10)" />
-              </linearGradient>
-            </defs>
-            <g stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" fill="none">
-              <path d="M40 80 L240 120 L430 100 L670 160 L760 210" />
-              <path d="M10 230 L180 260 L300 220 L520 280 L790 240" />
-              <path d="M110 10 L140 220 L180 420 L220 510" />
-              <path d="M430 30 L470 200 L460 500" />
-              <path d="M620 40 L600 220 L650 420" />
-            </g>
-            <g opacity="0.28" fill="rgba(255,255,255,0.06)">
-              <rect x="80" y="90" width="170" height="120" rx="18" />
-              <rect x="290" y="170" width="170" height="110" rx="18" />
-              <rect x="510" y="120" width="150" height="120" rx="18" />
-              <rect x="180" y="320" width="200" height="120" rx="18" />
-              <rect x="490" y="300" width="200" height="130" rx="18" />
-            </g>
-          </svg>
+      <div className="overflow-hidden rounded-lg border border-sidebar-border bg-sidebar-accent">
+        <div className="flex items-center justify-between border-b border-sidebar-border px-3 py-2 text-xs font-medium text-cream/70">
+          <span>Chai Heat Map — privacy-preserving</span>
+          <span>Live ward view</span>
         </div>
+        <div className="h-[460px] w-full">
+          <MapContainer
+            center={active.position}
+            zoom={13}
+            scrollWheelZoom
+            className="h-full w-full"
+            style={{ background: '#201c1a' }}
+          >
+            <MapFocus center={active.position} />
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {HOTSPOTS.map((hotspot) => {
+              const isActive = hotspot.pin === active.pin
+              const color =
+                hotspot.level === 'Critical'
+                  ? '#F25A4C'
+                  : hotspot.level === 'High'
+                    ? '#e67b59'
+                    : hotspot.level === 'Moderate'
+                      ? '#e0a23e'
+                      : '#52b57d'
 
-        <span className="absolute left-3 top-3 rounded bg-sidebar px-2 py-1 text-xs font-medium text-cream/70">
-          Chai Heat Map — privacy-preserving
-        </span>
-
-        <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full" aria-label="Civic heat map">
-          <defs>
-            <radialGradient id="heatGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(255, 132, 78, 0.85)" />
-              <stop offset="55%" stopColor="rgba(255, 132, 78, 0.30)" />
-              <stop offset="100%" stopColor="rgba(255, 132, 78, 0)" />
-            </radialGradient>
-            <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(255, 176, 57, 0.7)" />
-              <stop offset="55%" stopColor="rgba(255, 176, 57, 0.25)" />
-              <stop offset="100%" stopColor="rgba(255, 176, 57, 0)" />
-            </radialGradient>
-            <radialGradient id="leafGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(60, 200, 135, 0.6)" />
-              <stop offset="60%" stopColor="rgba(60, 200, 135, 0.18)" />
-              <stop offset="100%" stopColor="rgba(60, 200, 135, 0)" />
-            </radialGradient>
-          </defs>
-
-          {HOTSPOTS.map((h) => (
-            <g
-              key={h.pin}
-              onClick={() => setActive(h)}
-              className="cursor-pointer"
-              aria-label={`Hotspot ${h.pin}, ${h.level}`}
-            >
-              <circle
-                cx={h.x}
-                cy={h.y}
-                r={h.intensity * 16}
-                fill={
-                  h.level === 'Critical'
-                    ? 'rgba(244, 88, 73, 0.30)'
-                    : h.level === 'High'
-                      ? 'rgba(240, 121, 80, 0.26)'
-                      : h.level === 'Moderate'
-                        ? 'rgba(255, 178, 71, 0.24)'
-                        : 'rgba(72, 190, 129, 0.22)'
-                }
-              />
-              <circle
-                cx={h.x}
-                cy={h.y}
-                r={h.intensity * 7}
-                fill={
-                  h.level === 'Critical'
-                    ? '#F25A4C'
-                    : h.level === 'High'
-                      ? '#e67b59'
-                      : h.level === 'Moderate'
-                        ? '#e0a23e'
-                        : '#52b57d'
-                }
-                opacity={0.9}
-              />
-              {active.pin === h.pin && (
-                <g>
-                  <circle cx={h.x} cy={h.y} r={h.intensity * 12} fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="0.5" />
-                  <circle cx={h.x} cy={h.y} r={h.intensity * 15} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
-                </g>
-              )}
-            </g>
-          ))}
-        </svg>
+              return (
+                <Circle
+                  key={hotspot.pin}
+                  center={hotspot.position}
+                  radius={hotspot.intensity * 1000}
+                  pathOptions={{
+                    color,
+                    fillColor: color,
+                    fillOpacity: isActive ? 0.38 : 0.2,
+                    weight: isActive ? 2 : 1,
+                  }}
+                  eventHandlers={{ click: () => setActive(hotspot) }}
+                >
+                  <Popup>
+                    <div className="text-xs text-charcoal">
+                      <strong>{hotspot.label}</strong>
+                      <div>PIN {hotspot.pin}</div>
+                      <div>{hotspot.level} • {hotspot.issues} issues</div>
+                    </div>
+                  </Popup>
+                </Circle>
+              )
+            })}
+          </MapContainer>
+        </div>
       </div>
 
       <div className="rounded-lg border border-sidebar-border bg-sidebar-accent p-5">
