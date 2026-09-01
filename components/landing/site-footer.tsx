@@ -41,10 +41,7 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="mt-10 flex flex-col items-start justify-between gap-2 border-t border-cream/15 pt-6 text-xs text-cream/60 sm:flex-row sm:items-center">
-          <p>
-            &copy; {new Date().getFullYear()} CivicChai &middot; Demo data only.
-            No real citizen information.
-          </p>
+          <p>&copy; {new Date().getFullYear()} CivicChai.</p>
           <p className="font-deva">चाय · चर्चा · बदलाव</p>
         </div>
       </div>

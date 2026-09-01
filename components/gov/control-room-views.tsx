@@ -257,7 +257,7 @@ function IssueDetail({
             {issue.reports} independent reports
           </p>
         </Section>
-        <Section title="Officer / Hub (Demo data)">
+        <Section title="Officer / Hub">
           <p className="flex items-center gap-2 text-sm">
             <ShieldCheck className="h-4 w-4 text-gold" /> {issue.officer}
           </p>

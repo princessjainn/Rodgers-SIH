@@ -6,7 +6,26 @@ import { Logo } from '@/components/brand/logo'
 import { Building2, MapPin, Phone, ShieldCheck, FileText } from 'lucide-react'
 
 export function ReportPreview() {
-  const issue = ISSUES[1] // streetlight outage
+  const issue =
+    ISSUES[1] ?? {
+      documentId: 'CC-READY-000001',
+      title: 'Community issue intake',
+      locality: 'Your neighbourhood',
+      description:
+        'This section will display a live civic issue from Supabase once your backend and database are connected.',
+      department: 'Municipal operations',
+      pin: 'Local feed',
+      hub: 'Live system',
+      officer: 'Assigned by workflow',
+      priority: 'Moderate' as const,
+      trust: 0,
+      reports: 0,
+      supporters: 0,
+      daysUnresolved: 0,
+      status: 'Filed' as const,
+      chaiHeat: 0,
+    }
+
   return (
     <section className="paper-grain">
       <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
@@ -20,7 +39,6 @@ export function ReportPreview() {
         </div>
 
         <div className="mt-10 overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
-          {/* header */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-chai px-6 py-4 text-cream">
             <div className="flex items-center gap-3">
               <Logo showWordmark={false} variant="inverted" />
@@ -37,7 +55,6 @@ export function ReportPreview() {
           </div>
 
           <div className="grid gap-6 p-6 lg:grid-cols-[1.4fr_1fr]">
-            {/* left: case details */}
             <div>
               <h3 className="font-display text-xl font-extrabold text-charcoal">
                 {issue.title} — {issue.locality}
@@ -50,7 +67,7 @@ export function ReportPreview() {
                 <Detail icon={Building2} k="Department" v={issue.department} />
                 <Detail icon={MapPin} k="PIN Hub" v={`${issue.pin} · ${issue.hub}`} />
                 <Detail icon={ShieldCheck} k="Officer / Office" v={issue.officer} />
-                <Detail icon={Phone} k="Official Contact" v="1800-XXX-XXXX (Demo)" />
+                <Detail icon={Phone} k="Official Contact" v="Live routing via Supabase" />
               </dl>
 
               <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -66,9 +83,7 @@ export function ReportPreview() {
                   Relevant public reference
                 </p>
                 <p className="mt-1 text-sm text-charcoal/80">
-                  Municipal street-lighting maintenance service standard (Demo
-                  reference). Source, authority &amp; last-verified date shown in
-                  the full report.
+                  This detail is populated from your live civic workflow once Supabase is connected.
                 </p>
                 <p className="mt-2 text-xs italic text-charcoal/50">
                   For civic education only — not legal advice.
@@ -76,7 +91,6 @@ export function ReportPreview() {
               </div>
             </div>
 
-            {/* right: heat + timeline */}
             <div className="rounded-2xl border border-border bg-background p-5">
               <ChaiHeatMeter heat={issue.chaiHeat} size="lg" />
               <p className="mt-1 text-xs text-charcoal/60">
