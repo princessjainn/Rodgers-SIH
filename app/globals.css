@@ -1,0 +1,173 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand-specific chai palette */
+  --color-chai: var(--chai);
+  --color-chai-foreground: var(--chai-foreground);
+  --color-terracotta: var(--terracotta);
+  --color-kulhad: var(--kulhad);
+  --color-cream: var(--cream);
+  --color-charcoal: var(--charcoal);
+  --color-leaf: var(--leaf);
+  --color-leaf-foreground: var(--leaf-foreground);
+  --color-gold: var(--gold);
+  --color-heat: var(--heat);
+  --color-heat-foreground: var(--heat-foreground);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-deva: var(--font-noto-deva), var(--font-inter), sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+}
+
+:root {
+  color-scheme: light;
+  --radius: 0.75rem;
+
+  /* Raw brand colors */
+  --chai: #6b3f24;
+  --chai-foreground: #fff8ec;
+  --terracotta: #b85c38;
+  --kulhad: #e8d3b0;
+  --cream: #fff8ec;
+  --charcoal: #25211e;
+  --leaf: #3f6b45;
+  --leaf-foreground: #fff8ec;
+  --gold: #d99a3d;
+  --heat: #c84630;
+  --heat-foreground: #fff8ec;
+
+  /* Semantic tokens (citizen / warm surface) */
+  --background: #fff8ec;
+  --foreground: #25211e;
+  --card: #fffdf7;
+  --card-foreground: #25211e;
+  --popover: #fffdf7;
+  --popover-foreground: #25211e;
+  --primary: #6b3f24;
+  --primary-foreground: #fff8ec;
+  --secondary: #efe2c8;
+  --secondary-foreground: #4a3320;
+  --muted: #f2e8d4;
+  --muted-foreground: #7a6a54;
+  --accent: #b85c38;
+  --accent-foreground: #fff8ec;
+  --destructive: #c84630;
+  --destructive-foreground: #fff8ec;
+  --border: #e4d4b6;
+  --input: #e4d4b6;
+  --ring: #b85c38;
+
+  --chart-1: #b85c38;
+  --chart-2: #d99a3d;
+  --chart-3: #3f6b45;
+  --chart-4: #6b3f24;
+  --chart-5: #c84630;
+
+  /* Government control room = cool, dense, professional dark-ink surface */
+  --sidebar: #211d1a;
+  --sidebar-foreground: #e8d3b0;
+  --sidebar-primary: #d99a3d;
+  --sidebar-primary-foreground: #25211e;
+  --sidebar-accent: #2f2925;
+  --sidebar-accent-foreground: #fff8ec;
+  --sidebar-border: #3a332d;
+  --sidebar-ring: #d99a3d;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+}
+
+/* Paper grain texture used on warm surfaces */
+.paper-grain {
+  background-image: radial-gradient(
+      circle at 1px 1px,
+      rgba(107, 63, 36, 0.04) 1px,
+      transparent 0
+    );
+  background-size: 6px 6px;
+}
+
+/* Steam animation */
+@keyframes steam-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scaleX(1);
+  }
+  40% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px) scaleX(1.4);
+  }
+}
+.animate-steam {
+  animation: steam-rise 2.6s ease-in-out infinite;
+}
+
+@keyframes heat-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.85;
+  }
+}
+.animate-heat {
+  animation: heat-pulse 1.8s ease-in-out infinite;
+}
