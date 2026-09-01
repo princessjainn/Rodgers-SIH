@@ -1,3 +1,5 @@
+'use client'
+
 import { LOCALITY } from '@/lib/demo-data'
 import { ChaiCard } from '@/components/brand/chai-card'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
