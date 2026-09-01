@@ -57,6 +57,7 @@ export function StreeChat() {
   ])
   const [input, setInput] = useState('')
   const [isOffline, setIsOffline] = useState(false)
+  const [preferOfflineModel, setPreferOfflineModel] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [webllmStatus, setWebllmStatus] = useState<'idle' | 'ready' | 'fallback'>('idle')
   const engineRef = useRef<any>(null)
@@ -119,11 +120,14 @@ export function StreeChat() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, open])
 
+  const isUsingOfflineModel = preferOfflineModel || isOffline || webllmStatus === 'fallback'
+
   const statusText = useMemo(() => {
+    if (preferOfflineModel) return 'Offline model active'
     if (webllmStatus === 'ready') return 'Local AI ready'
     if (webllmStatus === 'fallback') return 'Offline guidance ready'
     return isOffline ? 'Offline mode' : 'Online mode'
-  }, [isOffline, webllmStatus])
+  }, [isOffline, preferOfflineModel, webllmStatus])
 
   async function handleSend() {
     const trimmed = input.trim()
@@ -137,7 +141,7 @@ export function StreeChat() {
     try {
       let response = buildReply(trimmed)
 
-      if (webllmStatus === 'ready' && engineRef.current && typeof window !== 'undefined') {
+      if (!isUsingOfflineModel && webllmStatus === 'ready' && engineRef.current && typeof window !== 'undefined') {
         try {
           const result = await engineRef.current.chat.completions.create({
             messages: [
@@ -224,10 +228,23 @@ export function StreeChat() {
           <div className="border-t border-border bg-white p-3">
             <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-charcoal/50">
               <span className="inline-flex items-center gap-1.5">
-                {isOffline ? <WifiOff className="h-3 w-3" /> : <Wifi className="h-3 w-3" />}
-                {isOffline ? 'Offline' : 'Connected'}
+                {isUsingOfflineModel ? <WifiOff className="h-3 w-3" /> : <Wifi className="h-3 w-3" />}
+                {isUsingOfflineModel ? 'Offline' : 'Connected'}
               </span>
               <span>{webllmStatus === 'ready' ? 'WebLLM ready' : 'Local fallback'}</span>
+            </div>
+            <div className="mb-2">
+              <button
+                type="button"
+                onClick={() => setPreferOfflineModel((current) => !current)}
+                className={`inline-flex w-full items-center justify-center rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] transition-colors ${
+                  preferOfflineModel
+                    ? 'border-terracotta bg-terracotta/10 text-terracotta'
+                    : 'border-border bg-card text-charcoal/70 hover:border-chai/40 hover:text-chai'
+                }`}
+              >
+                {preferOfflineModel ? 'Offline model active' : 'Switch to offline model'}
+              </button>
             </div>
             <div className="flex gap-2">
               <input
