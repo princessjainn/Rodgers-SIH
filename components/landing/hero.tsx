@@ -38,7 +38,7 @@ export function Hero() {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="#tapri"
+              href="/chai-tapri"
               className="inline-flex items-center gap-2 rounded-xl border border-chai/30 bg-cream px-5 py-3 text-sm font-semibold text-chai transition-colors hover:bg-chai/5"
             >
               Explore Chai Tapri

@@ -6,11 +6,11 @@ import { Logo } from '@/components/brand/logo'
 import { Menu, X } from 'lucide-react'
 
 const LINKS = [
-  { label: 'Local Chai', href: '#local-chai' },
-  { label: 'How it Works', href: '#how' },
-  { label: 'Chai Tapri', href: '#tapri' },
+  { label: 'Local Chai', href: '/citizen' },
+  { label: 'How it Works', href: '/how-it-works' },
+  { label: 'Chai Tapri', href: '/chai-tapri' },
   { label: 'For Authorities', href: '/control-room' },
-  { label: 'About', href: '#about' },
+  { label: 'About', href: '/about' },
 ]
 
 export function SiteNav() {

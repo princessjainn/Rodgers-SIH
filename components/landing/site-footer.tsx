@@ -33,9 +33,9 @@ export function SiteFooter() {
             <FooterCol
               title="About"
               links={[
-                ['How it works', '/#how'],
-                ['Accessibility', '/#about'],
-                ['Civic education', '/#about'],
+                ['How it works', '/how-it-works'],
+                ['Accessibility', '/about'],
+                ['Civic education', '/about'],
               ]}
             />
           </div>
