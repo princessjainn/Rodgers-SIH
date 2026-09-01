@@ -67,23 +67,27 @@ export function Composer({ onClose }: { onClose: () => void }) {
     if (!SpeechRecognition) return
 
     const recognition = new SpeechRecognition()
-    recognition.lang = 'en-IN'
+    recognition.lang = lang === 'Auto Detect' ? 'en-IN' : lang === 'हिन्दी' ? 'hi-IN' : lang === 'मराठी' ? 'mr-IN' : 'en-IN'
     recognition.interimResults = true
     recognition.continuous = false
 
     recognition.onresult = (event: any) => {
-      let transcript = ''
-      for (let i = 0; i < event.results.length; i += 1) {
-        transcript += event.results[i][0]?.transcript ?? ''
-      }
-
+      const latestResult = event.results?.[event.results.length - 1]
+      const transcript = latestResult?.[0]?.transcript ?? ''
       const cleaned = transcript.trim()
-      if (cleaned) {
-        setText((current) => {
-          if (!current) return cleaned
-          return current.trim().endsWith(cleaned) ? current : `${current.trim()} ${cleaned}`.trim()
-        })
-      }
+
+      if (!cleaned) return
+
+      setText((current) => {
+        if (!current) return cleaned
+
+        const lastWords = current.trim().split(/\s+/).slice(-5).join(' ')
+        if (lastWords && cleaned.includes(lastWords)) {
+          return current
+        }
+
+        return `${current.trim()} ${cleaned}`.trim()
+      })
     }
 
     recognition.onend = () => setIsListening(false)

@@ -193,6 +193,19 @@ function parseGroqJsonContent(content: unknown): Record<string, unknown> {
   }
 }
 
+function readStringValue(value: unknown, fallback: string): string {
+  return typeof value === 'string' && value.trim() ? value.trim() : fallback
+}
+
+function readNumberValue(value: unknown, fallback: number): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return fallback
+}
+
 export async function analyzeComplaintWithGroq(
   input: string,
   detectedLanguage = 'Auto Detect',
@@ -247,12 +260,12 @@ export async function analyzeComplaintWithGroq(
 
     const duplicateIssue = parsed.duplicateIssueFound
       ? {
-          title: parsed.duplicateIssueTitle ?? fallback.duplicateIssue?.title ?? 'Similar civic issue found',
-          pin: parsed.duplicateIssuePin ?? fallback.duplicateIssue?.pin ?? '401208',
-          status: parsed.duplicateIssueStatus ?? fallback.duplicateIssue?.status ?? 'Assigned',
-          chaiHeat: Number(parsed.duplicateIssueHeat ?? fallback.duplicateIssue?.chaiHeat ?? 86),
-          reports: Number(parsed.duplicateIssueReports ?? fallback.duplicateIssue?.reports ?? 52),
-          supporters: Number(parsed.duplicateIssueSupporters ?? fallback.duplicateIssue?.supporters ?? 1842),
+          title: readStringValue(parsed.duplicateIssueTitle, fallback.duplicateIssue?.title ?? 'Similar civic issue found'),
+          pin: readStringValue(parsed.duplicateIssuePin, fallback.duplicateIssue?.pin ?? '401208'),
+          status: readStringValue(parsed.duplicateIssueStatus, fallback.duplicateIssue?.status ?? 'Assigned'),
+          chaiHeat: readNumberValue(parsed.duplicateIssueHeat, fallback.duplicateIssue?.chaiHeat ?? 86),
+          reports: readNumberValue(parsed.duplicateIssueReports, fallback.duplicateIssue?.reports ?? 52),
+          supporters: readNumberValue(parsed.duplicateIssueSupporters, fallback.duplicateIssue?.supporters ?? 1842),
         }
       : fallback.duplicateIssue
 
@@ -266,7 +279,7 @@ export async function analyzeComplaintWithGroq(
       confidence: Number(parsed.confidence ?? fallback.confidence),
       summary: String(parsed.summary ?? fallback.summary),
       duplicateIssue,
-      duplicateIssueId: parsed.duplicateIssueId ?? fallback.duplicateIssueId,
+      duplicateIssueId: readStringValue(parsed.duplicateIssueId, fallback.duplicateIssueId ?? 'CC-DUPLICATE-UNKNOWN'),
       duplicateIssueFound: Boolean(parsed.duplicateIssueFound ?? duplicateIssue),
     }
   } catch (error) {

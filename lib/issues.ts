@@ -1,6 +1,21 @@
 import { getSupabaseClient } from '@/lib/supabase'
 import { fallbackIssues } from '@/lib/fallback-data'
+import { seedIssues } from '@/lib/seed-data'
 import type { CreateIssueInput, IssueRecord } from '@/lib/types'
+
+const ISSUE_FALLBACK_STORE_KEY = '__civicchai_issue_store__'
+
+function getFallbackIssueStore(): IssueRecord[] {
+  const globalScope = globalThis as typeof globalThis & {
+    [ISSUE_FALLBACK_STORE_KEY]?: IssueRecord[]
+  }
+
+  if (!globalScope[ISSUE_FALLBACK_STORE_KEY]) {
+    globalScope[ISSUE_FALLBACK_STORE_KEY] = [...seedIssues, ...fallbackIssues]
+  }
+
+  return globalScope[ISSUE_FALLBACK_STORE_KEY]!
+}
 
 function normalizeIssue(row: Record<string, any>): IssueRecord {
   const chaiHeat = Number(row.chai_heat ?? row.chaiHeat ?? 0)
@@ -35,17 +50,23 @@ export async function getIssues(): Promise<IssueRecord[]> {
   const supabase = getSupabaseClient()
 
   if (!supabase) {
-    return []
+    const fallback = getFallbackIssueStore()
+    return [...fallback].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }
 
   const { data, error } = await supabase.from('issues').select('*').order('created_at', { ascending: false })
 
   if (error) {
     console.error('getIssues error:', error)
-    return []
+    return getFallbackIssueStore()
   }
 
-  return (data ?? []).map(normalizeIssue)
+  const rows = (data ?? []).map(normalizeIssue)
+  if (!rows.length) {
+    return getFallbackIssueStore()
+  }
+
+  return rows
 }
 
 export async function getIssueById(id: string): Promise<IssueRecord | null> {
@@ -114,6 +135,10 @@ export async function createIssue(input: CreateIssueInput): Promise<IssueRecord>
       image_url: payload.image_url ?? undefined,
       createdAt: new Date().toISOString(),
     }
+
+    const store = getFallbackIssueStore()
+    store.unshift(issue)
+
     return issue
   }
 
