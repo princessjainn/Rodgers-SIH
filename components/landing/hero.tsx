@@ -5,10 +5,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Flame, Users, FileText, Clock, ArrowRight } from 'lucide-react'
 import { heatLabel } from '@/lib/issue-helpers'
+import { useLanguage } from '@/components/language-provider'
 
 export function Hero() {
   const [heat, setHeat] = useState(72)
   const flames = Math.max(1, Math.round(heat / 25))
+  const { t } = useLanguage()
 
   return (
     <section className="paper-grain relative overflow-hidden">
@@ -16,17 +18,15 @@ export function Hero() {
         {/* Copy */}
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-xs font-semibold text-chai">
-            <span className="font-deva">चर्चा</span> India&apos;s civic social network
+            <span className="font-deva">चर्चा</span> {t.hero.badge}
           </span>
 
           <h1 className="mt-5 text-balance font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-charcoal sm:text-5xl lg:text-6xl">
-            India mein har ek{' '}
-            <span className="text-terracotta">Charcha</span> Chai Pe hoti hai.
+            {t.hero.title}
           </h1>
 
           <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-charcoal/75 sm:text-lg">
-            Ab mohalla ki baat sirf tapri tak nahi. Report karo. Charcha karo.
-            Vote karo. Aur dekho tumhari awaaz kahan tak pahunchti hai.
+            {t.hero.description}
           </p>
 
           <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -34,28 +34,28 @@ export function Hero() {
               href="/citizen"
               className="inline-flex items-center gap-2 rounded-xl bg-chai px-5 py-3 text-sm font-semibold text-cream shadow-sm transition-transform hover:-translate-y-0.5"
             >
-              Start a Charcha
+              {t.hero.ctaPrimary}
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/chai-tapri"
               className="inline-flex items-center gap-2 rounded-xl border border-chai/30 bg-cream px-5 py-3 text-sm font-semibold text-chai transition-colors hover:bg-chai/5"
             >
-              Explore Chai Tapri
+              {t.hero.ctaSecondary}
             </Link>
           </div>
 
           <dl className="mt-9 flex flex-wrap gap-x-8 gap-y-3 text-sm">
             <div>
-              <dt className="text-charcoal/60">Cities ki charcha</dt>
+              <dt className="text-charcoal/60">{t.hero.cities}</dt>
               <dd className="font-display text-xl font-bold text-chai">120+</dd>
             </div>
             <div>
-              <dt className="text-charcoal/60">Issues resolved</dt>
+              <dt className="text-charcoal/60">{t.hero.issuesResolved}</dt>
               <dd className="font-display text-xl font-bold text-leaf">18.4k</dd>
             </div>
             <div>
-              <dt className="text-charcoal/60">Languages</dt>
+              <dt className="text-charcoal/60">{t.hero.languages}</dt>
               <dd className="font-display text-xl font-bold text-terracotta">3+</dd>
             </div>
           </dl>

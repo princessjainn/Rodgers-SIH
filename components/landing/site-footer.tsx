@@ -1,7 +1,12 @@
+'use client'
+
 import Link from 'next/link'
 import { Logo } from '@/components/brand/logo'
+import { useLanguage } from '@/components/language-provider'
 
 export function SiteFooter() {
+  const { t } = useLanguage()
+
   return (
     <footer className="border-t border-border bg-chai text-cream">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
@@ -15,25 +20,25 @@ export function SiteFooter() {
           </div>
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
             <FooterCol
-              title="Product"
+              title={t.footer.product}
               links={[
-                ['Local Chai', '/citizen'],
-                ['Chai Tapri', '/citizen'],
-                ['Pour a Chai', '/citizen'],
+                [t.nav.localChai, '/citizen'],
+                [t.nav.chaiTapri, '/citizen'],
+                [t.nav.startCharcha, '/citizen'],
               ]}
             />
             <FooterCol
-              title="Authorities"
+              title={t.footer.authorities}
               links={[
-                ['Control Room', '/control-room'],
+                [t.nav.authorityLogin, '/control-room'],
                 ['GIS Hotspots', '/control-room'],
                 ['Analytics', '/control-room'],
               ]}
             />
             <FooterCol
-              title="About"
+              title={t.footer.about}
               links={[
-                ['How it works', '/how-it-works'],
+                [t.nav.howItWorks, '/how-it-works'],
                 ['Accessibility', '/about'],
                 ['Civic education', '/about'],
               ]}
@@ -42,7 +47,7 @@ export function SiteFooter() {
         </div>
         <div className="mt-10 flex flex-col items-start justify-between gap-2 border-t border-cream/15 pt-6 text-xs text-cream/60 sm:flex-row sm:items-center">
           <p>&copy; {new Date().getFullYear()} CivicChai.</p>
-          <p className="font-deva">चाय · चर्चा · बदलाव</p>
+          <p className="font-deva">{t.footer.tag}</p>
         </div>
       </div>
     </footer>

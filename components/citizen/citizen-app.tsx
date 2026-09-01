@@ -17,17 +17,19 @@ import { LOCALITY } from '@/lib/demo-data'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
 import { MapPin } from 'lucide-react'
 import type { IssueRecord } from '@/lib/types'
+import { useLanguage } from '@/components/language-provider'
 
 type Tab = 'home' | 'tapri' | 'charcha' | 'profile'
 
-const NAV: { key: Tab; label: string; icon: React.ElementType }[] = [
-  { key: 'home', label: 'Local Chai', icon: Home },
-  { key: 'tapri', label: 'Chai Tapri', icon: Flame },
-  { key: 'charcha', label: 'My Charcha', icon: ScrollText },
-  { key: 'profile', label: 'Profile', icon: User },
-]
-
 export function CitizenApp() {
+  const { t } = useLanguage()
+  const NAV: { key: Tab; label: string; icon: React.ElementType }[] = [
+    { key: 'home', label: t.citizenApp.tabs[0], icon: Home },
+    { key: 'tapri', label: t.citizenApp.tabs[1], icon: Flame },
+    { key: 'charcha', label: t.citizenApp.tabs[2], icon: ScrollText },
+    { key: 'profile', label: t.citizenApp.tabs[3], icon: User },
+  ]
+
   const [tab, setTab] = useState<Tab>('home')
   const [composerOpen, setComposerOpen] = useState(false)
   const [localHeat, setLocalHeat] = useState<number | null>(null)
@@ -63,14 +65,13 @@ export function CitizenApp() {
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-leaf/40 bg-leaf/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-leaf">
                 <WifiOff className="h-3 w-3" />
-                Offline ready
+                {t.citizenApp.offline}
               </span>
               <h1 className="mt-5 font-display text-4xl font-extrabold tracking-tight text-charcoal sm:text-5xl lg:text-6xl">
-                Your Local Chai
+                {t.citizenApp.title}
               </h1>
               <p className="mt-5 max-w-xl text-lg leading-relaxed text-charcoal/75">
-                Your locality civic feed. Report, discuss and support issues in your neighbourhood.
-                Every charcha starts with a cup of chai.
+                {t.citizenApp.subtitle}
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <button
@@ -78,13 +79,13 @@ export function CitizenApp() {
                   className="inline-flex items-center gap-2 rounded-xl bg-terracotta px-5 py-3 text-sm font-semibold text-cream shadow-sm transition-transform hover:-translate-y-0.5"
                 >
                   <Plus className="h-4 w-4" />
-                  Pour a Chai — Start your Charcha
+                  {t.citizenApp.primary}
                 </button>
                 <Link
                   href="/chai-tapri"
                   className="inline-flex items-center gap-2 rounded-xl border border-chai/30 bg-cream px-5 py-3 text-sm font-semibold text-chai transition-colors hover:bg-chai/5"
                 >
-                  View Chai Tapri
+                  {t.citizenApp.secondary}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -92,7 +93,7 @@ export function CitizenApp() {
 
             <div className="rounded-3xl border border-border bg-card p-6 shadow-lg">
               <div className="rounded-2xl border border-border bg-chai p-5 text-cream">
-                <p className="text-xs uppercase tracking-widest text-cream/60">Your Chai</p>
+                <p className="text-xs uppercase tracking-widest text-cream/60">{t.citizenApp.yourChai}</p>
                 <div className="mt-2 flex items-center justify-between">
                   <div>
                     <p className="font-display text-3xl font-extrabold">PIN {LOCALITY.pin}</p>
@@ -105,8 +106,7 @@ export function CitizenApp() {
                 </div>
               </div>
               <p className="mt-4 text-sm leading-relaxed text-charcoal/65">
-                Issues in your area are ranked by urgency, frequency and community support.
-                The hotter the chai, the more attention it gets.
+                {t.citizenApp.feedText} — {t.citizenApp.subtitle}
               </p>
             </div>
           </div>
@@ -143,7 +143,7 @@ export function CitizenApp() {
                 className="inline-flex items-center gap-2 rounded-lg bg-terracotta px-4 py-2.5 text-sm font-semibold text-cream shadow-sm transition-transform hover:-translate-y-0.5"
               >
                 <Plus className="h-4 w-4" />
-                Pour a Chai
+                {t.citizenApp.primary}
               </button>
             </div>
           </div>
@@ -170,14 +170,16 @@ export function CitizenApp() {
 /* ---- Desktop wrapper views that use existing view components in full-width layouts ---- */
 
 function LocalChaiDesktopView() {
+  const { t } = useLanguage()
+
   return (
     <div className="space-y-6">
       <div>
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
-          Feed
+          {t.citizenApp.feed}
         </span>
         <h2 className="mt-2 font-display text-2xl font-bold text-charcoal sm:text-3xl">
-          Issues in your locality
+          {t.citizenApp.feedText}
         </h2>
         <p className="mt-1 text-sm text-charcoal/60">
           Browse, support and discuss civic issues around PIN {LOCALITY.pin}
@@ -189,14 +191,16 @@ function LocalChaiDesktopView() {
 }
 
 function ChaiTapriDesktopView() {
+  const { t } = useLanguage()
+
   return (
     <div className="space-y-6">
       <div>
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-heat">
-          Trending
+          {t.citizenApp.trending}
         </span>
         <h2 className="mt-2 font-display text-2xl font-bold text-charcoal sm:text-3xl">
-          Chai Tapri — Hottest issues
+          {t.citizenApp.trendingText}
         </h2>
         <p className="mt-1 text-sm text-charcoal/60">
           Dekho kis mudde ki chai sabse garam hai.
@@ -208,14 +212,16 @@ function ChaiTapriDesktopView() {
 }
 
 function MyCharchaDesktopView() {
+  const { t } = useLanguage()
+
   return (
     <div className="space-y-6">
       <div>
         <span className="text-xs font-semibold uppercase tracking-[0.2em] text-chai">
-          Your Discussions
+          {t.citizenApp.discussions}
         </span>
         <h2 className="mt-2 font-display text-2xl font-bold text-charcoal sm:text-3xl">
-          My Charcha
+          {t.citizenApp.tabs[2]}
         </h2>
         <p className="mt-1 text-sm text-charcoal/60">
           Track issues you've filed, are watching or have supported.
@@ -227,6 +233,8 @@ function MyCharchaDesktopView() {
 }
 
 function ProfileDesktopView() {
+  const { t } = useLanguage()
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
@@ -234,10 +242,10 @@ function ProfileDesktopView() {
           Account
         </span>
         <h2 className="mt-2 font-display text-2xl font-bold text-charcoal sm:text-3xl">
-          Your Profile
+          {t.citizenApp.profile}
         </h2>
         <p className="mt-1 text-sm text-charcoal/60">
-          Manage your account, preferences and civic impact.
+          {t.citizenApp.profileText}
         </p>
       </div>
       <ProfileView />

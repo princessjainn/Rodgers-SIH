@@ -33,7 +33,15 @@ export function SiteNav() {
               href={l.href}
               className="text-sm font-medium text-charcoal/70 transition-colors hover:text-chai"
             >
-              {l.labelKey === 'authorityLogin' ? t.nav.authorityLogin : l.labelKey === 'localChai' ? t.nav.localChai : l.labelKey === 'howItWorks' ? t.nav.howItWorks : l.labelKey === 'chaiTapri' ? t.nav.chaiTapri : 'About'}
+              {l.labelKey === 'authorityLogin'
+                ? t.nav.authorityLogin
+                : l.labelKey === 'localChai'
+                  ? t.nav.localChai
+                  : l.labelKey === 'howItWorks'
+                    ? t.nav.howItWorks
+                    : l.labelKey === 'chaiTapri'
+                      ? t.nav.chaiTapri
+                      : t.nav.about}
             </Link>
           ))}
         </div>
@@ -85,7 +93,15 @@ export function SiteNav() {
                 onClick={() => setOpen(false)}
                 className="rounded-lg px-3 py-2.5 text-sm font-medium text-charcoal/80 hover:bg-chai/10"
               >
-                {l.labelKey === 'authorityLogin' ? t.nav.authorityLogin : l.labelKey === 'localChai' ? t.nav.localChai : l.labelKey === 'howItWorks' ? t.nav.howItWorks : l.labelKey === 'chaiTapri' ? t.nav.chaiTapri : 'About'}
+                {l.labelKey === 'authorityLogin'
+                  ? t.nav.authorityLogin
+                  : l.labelKey === 'localChai'
+                    ? t.nav.localChai
+                    : l.labelKey === 'howItWorks'
+                      ? t.nav.howItWorks
+                      : l.labelKey === 'chaiTapri'
+                        ? t.nav.chaiTapri
+                        : t.nav.about}
               </Link>
             ))}
             <div className="mt-2 rounded-lg border border-border bg-background px-3 py-2">

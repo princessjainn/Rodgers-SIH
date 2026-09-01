@@ -1,14 +1,38 @@
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { ArrowRight, Flame, TrendingUp } from 'lucide-react'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
 import { PriorityBadge } from '@/components/brand/badges'
 import { SiteFooter } from '@/components/landing/site-footer'
 import { SiteNav } from '@/components/landing/site-nav'
-import { getIssues } from '@/lib/issues'
+import { useLanguage } from '@/components/language-provider'
+import type { IssueRecord } from '@/lib/types'
 
-export default async function ChaiTapriPage() {
-  const issues = await getIssues()
+export default function ChaiTapriPage() {
+  const { t } = useLanguage()
+  const [issues, setIssues] = useState<IssueRecord[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/api/issues')
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Failed'))))
+      .then((payload) => {
+        if (!cancelled && Array.isArray(payload?.issues)) setIssues(payload.issues)
+      })
+      .catch(() => {
+        if (!cancelled) setIssues([])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const ranked = [...issues].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0)).slice(0, 6)
+
   return (
     <main className="min-h-dvh bg-background text-charcoal">
       <SiteNav />
@@ -16,14 +40,13 @@ export default async function ChaiTapriPage() {
       <section className="paper-grain border-b border-border">
         <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 lg:py-20">
           <span className="text-xs font-semibold uppercase tracking-[0.22em] text-heat">
-            Chai Tapri
+            {t.tapriPage.eyebrow}
           </span>
           <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight text-charcoal sm:text-5xl">
-            Dekho kis mudde ki chai sabse garam hai.
+            {t.tapriPage.title}
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-charcoal/75">
-            Issues rise in public visibility based on urgency, recurrence, community support, and the
-            intensity of action around them — not just raw votes alone.
+            {t.tapriPage.subtitle}
           </p>
         </div>
       </section>
@@ -33,15 +56,15 @@ export default async function ChaiTapriPage() {
           <div className="mb-8 flex items-center justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-terracotta">
-                Trending this week
+                {t.tapriPage.trendingLabel}
               </p>
               <h2 className="mt-2 font-display text-2xl font-bold text-charcoal sm:text-3xl">
-                Local heat map of reform priorities
+                {t.tapriPage.trendTitle}
               </h2>
             </div>
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium text-charcoal/70">
               <TrendingUp className="h-4 w-4 text-heat" />
-              Real-time signal
+              {t.tapriPage.realTimeSignal}
             </div>
           </div>
 
@@ -70,7 +93,7 @@ export default async function ChaiTapriPage() {
                 <div className="flex items-center gap-3 md:justify-end">
                   <div className="text-right">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal/45">
-                      Heat
+                      {t.tapriPage.heat}
                     </p>
                     <p className="font-display text-xl font-extrabold text-heat">{issue.chaiHeat}</p>
                   </div>
@@ -85,19 +108,19 @@ export default async function ChaiTapriPage() {
       <section className="border-t border-border bg-card">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
           <div className="grid gap-6 lg:grid-cols-3">
-            {[
-              { icon: Flame, title: 'Public urgency', text: 'The more people feel the problem, the more visible it becomes.' },
-              { icon: TrendingUp, title: 'Actionable momentum', text: 'Repeated reports and support create clarity for authorities.' },
-              { icon: ArrowRight, title: 'Follow through', text: 'Issues can be strengthened, resolved, or revisited with full context.' },
-            ].map(({ icon: Icon, title, text }) => (
-              <div key={title} className="rounded-2xl border border-border bg-background p-5">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-heat/10 text-heat">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 font-display text-lg font-bold text-charcoal">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-charcoal/70">{text}</p>
-              </div>
-            ))}
+            {t.tapriPage.cards.map(({ title, text }, index) => {
+              const iconMap = [Flame, TrendingUp, ArrowRight]
+              const Icon = iconMap[index] ?? ArrowRight
+              return (
+                <div key={title} className="rounded-2xl border border-border bg-background p-5">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-heat/10 text-heat">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-4 font-display text-lg font-bold text-charcoal">{title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-charcoal/70">{text}</p>
+                </div>
+              )
+            })}
           </div>
 
           <div className="mt-10 text-center">
@@ -105,7 +128,7 @@ export default async function ChaiTapriPage() {
               href="/citizen"
               className="inline-flex items-center gap-2 rounded-xl bg-chai px-6 py-3.5 text-sm font-semibold text-cream transition-transform hover:-translate-y-0.5"
             >
-              Join the Charcha
+              {t.tapriPage.cta}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
