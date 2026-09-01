@@ -1,40 +1,13 @@
-export type IssueStatus =
-  | 'Filed'
-  | 'AI Classified'
-  | 'Assigned'
-  | 'Acknowledged'
-  | 'In Progress'
-  | 'Resolved'
-  | 'Community Verified'
+import type { IssuePriority, IssueStatus, IssueRecord } from '@/lib/types'
 
-export type Priority = 'Critical' | 'High' | 'Moderate' | 'Low'
+export type { IssueStatus, IssuePriority, IssueRecord, CreateIssueInput } from '@/lib/types'
+export type Issue = IssueRecord
+export type Priority = IssuePriority
 
-export interface Issue {
-  id: string
-  documentId: string
-  title: string
-  description: string
-  category: string
-  department: string
-  pin: string
-  locality: string
-  status: IssueStatus
-  priority: Priority
-  trust: number
-  chaiHeat: number
-  supporters: number
-  reports: number
-  comments: number
-  daysUnresolved: number
-  officer: string
-  hub: string
-  image?: string
-  createdAt: string
-}
-
+export { fallbackIssues as ISSUES } from '@/lib/fallback-data'
 export const LOCALITY = {
-  pin: '',
-  name: 'Your city feed',
+  pin: '401208',
+  name: 'Market Square, civic zone',
 }
 
 export const CATEGORIES = [
@@ -45,8 +18,6 @@ export const CATEGORIES = [
   'Drainage',
   'Traffic',
 ] as const
-
-export const ISSUES: Issue[] = []
 
 export const TIMELINE_STEPS: { label: string; key: IssueStatus }[] = [
   { label: 'Filed', key: 'Filed' },

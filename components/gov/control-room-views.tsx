@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ISSUES } from '@/lib/demo-data'
+import type { IssueRecord } from '@/lib/types'
 import { PriorityBadge, StatusBadge, TrustBadge } from '@/components/brand/badges'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
 import { CivicTimeline } from '@/components/brand/civic-timeline'
@@ -205,7 +206,7 @@ function IssueDetail({
   issue,
   onClose,
 }: {
-  issue: (typeof ISSUES)[number]
+  issue: IssueRecord
   onClose: () => void
 }) {
   return (
@@ -251,7 +252,7 @@ function IssueDetail({
           </dl>
         </Section>
         <Section title="Community & heat">
-          <ChaiHeatMeter heat={issue.chaiHeat} size="md" className="text-cream" />
+          <ChaiHeatMeter heat={issue.chaiHeat ?? 0} size="md" className="text-cream" />
           <p className="mt-1 text-xs text-cream/60">
             {issue.supporters.toLocaleString('en-IN')} supporters ·{' '}
             {issue.reports} independent reports

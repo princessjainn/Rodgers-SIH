@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { ISSUES, LOCALITY, type Issue } from '@/lib/demo-data'
+import { ISSUES, LOCALITY } from '@/lib/demo-data'
+import type { IssueRecord } from '@/lib/types'
 import { ChaiCard } from '@/components/brand/chai-card'
 import { ChaiHeatMeter } from '@/components/brand/chai-heat-meter'
 import { CivicTimeline } from '@/components/brand/civic-timeline'
@@ -46,7 +47,7 @@ const TABS = ['Hottest', 'Rising', 'Nearby', 'Unresolved'] as const
 
 export function ChaiTapriView() {
   const [tab, setTab] = useState<(typeof TABS)[number]>('Hottest')
-  const ranked = [...ISSUES].sort((a, b) => b.chaiHeat - a.chaiHeat)
+  const ranked = [...ISSUES].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0))
   return (
     <div className="space-y-4">
       <div>
@@ -93,7 +94,7 @@ export function ChaiTapriView() {
                 </span>
               </div>
             </div>
-            <ChaiHeatMeter heat={issue.chaiHeat} size="sm" showLabel={false} />
+            <ChaiHeatMeter heat={issue.chaiHeat ?? 0} size="sm" showLabel={false} />
           </li>
         ))}
       </ol>
@@ -106,7 +107,7 @@ const MY_TABS = ['Filed', 'Tracking', 'Upvoted', 'Resolved'] as const
 
 export function MyCharchaView() {
   const [tab, setTab] = useState<(typeof MY_TABS)[number]>('Tracking')
-  const [active, setActive] = useState<Issue>(ISSUES[1])
+  const [active, setActive] = useState<IssueRecord>(ISSUES[1] ?? ISSUES[0])
   return (
     <div className="space-y-4">
       <h1 className="font-display text-2xl font-extrabold text-charcoal">

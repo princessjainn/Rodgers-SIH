@@ -46,7 +46,7 @@ export function LocalChai() {
 }
 
 export function ChaiTapri() {
-  const ranked = [...ISSUES].sort((a, b) => b.chaiHeat - a.chaiHeat).slice(0, 4)
+  const ranked = [...ISSUES].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0)).slice(0, 4)
   return (
     <section id="tapri" className="border-y border-border bg-card">
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
@@ -82,7 +82,7 @@ export function ChaiTapri() {
                 </p>
               </div>
               <PriorityBadge priority={issue.priority} />
-              <ChaiHeatMeter heat={issue.chaiHeat} size="sm" showLabel={false} />
+              <ChaiHeatMeter heat={issue.chaiHeat ?? 0} size="sm" showLabel={false} />
             </li>
           ))}
         </ol>

@@ -66,7 +66,7 @@ export function ReportPreview() {
               <dl className="mt-5 grid grid-cols-2 gap-4 text-sm">
                 <Detail icon={Building2} k="Department" v={issue.department} />
                 <Detail icon={MapPin} k="PIN Hub" v={`${issue.pin} · ${issue.hub}`} />
-                <Detail icon={ShieldCheck} k="Officer / Office" v={issue.officer} />
+                <Detail icon={ShieldCheck} k="Officer / Office" v={issue.officer ?? 'Assigned by workflow'} />
                 <Detail icon={Phone} k="Official Contact" v="Live routing via Supabase" />
               </dl>
 
@@ -92,7 +92,7 @@ export function ReportPreview() {
             </div>
 
             <div className="rounded-2xl border border-border bg-background p-5">
-              <ChaiHeatMeter heat={issue.chaiHeat} size="lg" />
+              <ChaiHeatMeter heat={issue.chaiHeat ?? 0} size="lg" />
               <p className="mt-1 text-xs text-charcoal/60">
                 {issue.supporters.toLocaleString('en-IN')} supporters &middot;{' '}
                 {issue.daysUnresolved} days unresolved

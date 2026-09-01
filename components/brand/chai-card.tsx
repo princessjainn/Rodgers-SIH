@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
-import type { Issue } from '@/lib/demo-data'
+import type { IssueRecord } from '@/lib/types'
 import { ChaiHeatMeter } from './chai-heat-meter'
 import { StatusBadge, DepartmentBadge } from './badges'
 import { MapPin, MessageCircle, Users, Flame } from 'lucide-react'
 
-export function ChaiCard({ issue }: { issue: Issue }) {
+export function ChaiCard({ issue }: { issue: IssueRecord }) {
   const [supported, setSupported] = useState(false)
   const supporters = issue.supporters + (supported ? 1 : 0)
 
@@ -40,7 +40,7 @@ export function ChaiCard({ issue }: { issue: Issue }) {
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3 border-t border-border bg-secondary/40 px-4 py-3">
-        <ChaiHeatMeter heat={issue.chaiHeat} size="sm" />
+        <ChaiHeatMeter heat={issue.chaiHeat ?? 0} size="sm" />
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
@@ -50,7 +50,7 @@ export function ChaiCard({ issue }: { issue: Issue }) {
             <MessageCircle className="h-3.5 w-3.5" />
             {issue.comments}
           </span>
-          <span>{issue.daysUnresolved > 0 ? `${issue.daysUnresolved}d open` : 'Resolved'}</span>
+          <span>{(issue.daysUnresolved ?? 0) > 0 ? `${issue.daysUnresolved ?? 0}d open` : 'Resolved'}</span>
         </div>
       </div>
 

@@ -1,5 +1,7 @@
 import { cn } from '@/lib/utils'
-import type { IssueStatus, Priority } from '@/lib/demo-data'
+import type { IssueStatus, IssuePriority } from '@/lib/types'
+
+type Priority = IssuePriority
 
 export function StatusBadge({ status }: { status: IssueStatus }) {
   const map: Record<IssueStatus, string> = {

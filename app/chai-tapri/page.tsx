@@ -6,7 +6,7 @@ import { ISSUES } from '@/lib/demo-data'
 import { SiteFooter } from '@/components/landing/site-footer'
 import { SiteNav } from '@/components/landing/site-nav'
 
-const ranked = [...ISSUES].sort((a, b) => b.chaiHeat - a.chaiHeat).slice(0, 6)
+const ranked = [...ISSUES].sort((a, b) => (b.chaiHeat ?? 0) - (a.chaiHeat ?? 0)).slice(0, 6)
 
 export default function ChaiTapriPage() {
   return (
