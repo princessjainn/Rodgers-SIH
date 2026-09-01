@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { useMap as useMapHook } from 'react-leaflet'
 import { cn } from '@/lib/utils'
 import type { IssueRecord } from '@/lib/types'
 import { PriorityBadge, StatusBadge, TrustBadge } from '@/components/brand/badges'
@@ -31,10 +32,6 @@ const Circle = dynamic(
 )
 const Popup = dynamic(
   async () => (await import('react-leaflet')).Popup,
-  { ssr: false },
-)
-const useMap = dynamic(
-  async () => (await import('react-leaflet')).useMap,
   { ssr: false },
 )
 
@@ -391,7 +388,7 @@ const HOTSPOTS = [
 ]
 
 function MapFocus({ center }: { center: [number, number] }) {
-  const map = useMap()
+  const map = useMapHook()
 
   useEffect(() => {
     map.setView(center, 13)

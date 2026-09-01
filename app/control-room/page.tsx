@@ -1,11 +1,14 @@
-import { ControlRoom } from '@/components/gov/control-room'
+'use client'
 
-export const metadata = {
-  title: 'Control Room — CivicChai',
-  description:
-    'Government control room for triaging, prioritizing and resolving civic issues.',
-}
+import { ControlRoomPage } from '@/components/gov/control-room-page'
+import { AuthProvider } from '@/components/auth-provider'
 
-export default function ControlRoomPage() {
-  return <ControlRoom />
+export const dynamic = 'force-dynamic'
+
+export default function ControlRoomPageWrapper() {
+  return (
+    <AuthProvider>
+      <ControlRoomPage />
+    </AuthProvider>
+  )
 }
