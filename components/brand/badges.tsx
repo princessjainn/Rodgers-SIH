@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import type { IssueStatus, IssuePriority } from '@/lib/types'
+import type { IssuePriority, IssueStatus } from '@/lib/types'
 
 type Priority = IssuePriority
 

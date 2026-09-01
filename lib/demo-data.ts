@@ -1,10 +1,11 @@
-import type { IssuePriority, IssueStatus, IssueRecord } from '@/lib/types'
+import type { IssuePriority, IssueRecord, IssueStatus } from '@/lib/types'
 
 export type { IssueStatus, IssuePriority, IssueRecord, CreateIssueInput } from '@/lib/types'
 export type Issue = IssueRecord
 export type Priority = IssuePriority
 
 export { fallbackIssues as ISSUES } from '@/lib/fallback-data'
+
 export const LOCALITY = {
   pin: '401208',
   name: 'Market Square, civic zone',
